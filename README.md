@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HealthScore - AI-Powered Food Analysis 🥗
 
-## Getting Started
+An intelligent food analysis application that uses Google Gemini AI to analyze food photos and provide instant nutritional information with a comprehensive health score.
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8)
+![Prisma](https://img.shields.io/badge/Prisma-7-2D3748)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Features
+
+- **🤖 AI-Powered Analysis**: Upload food photos and get instant nutritional breakdown using Google Gemini AI
+- **📊 Health Score**: Each meal receives a 0-100 health score based on nutritional value
+- **🍎 Detailed Nutrition**: View calories, protein, carbs, fats, fiber, sugar, and sodium
+- **📝 Ingredient Detection**: AI identifies ingredients in your meals
+- **📈 Meal History**: Track all your analyzed meals over time
+- **📉 Dashboard Analytics**: View trends and statistics with beautiful charts
+- **🎨 Modern UI**: Beautiful, responsive design using shadcn/ui components
+- **🌙 Dark Mode Ready**: Supports system theme preferences
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ installed
+- A Google Gemini API key (free tier available)
+
+### Installation
+
+1. **Clone and install dependencies:**
+   ```bash
+   cd /path/to/project
+   npm install
+   ```
+
+2. **Set up your environment variables:**
+   
+   Create a `.env` file in the project root:
+   ```env
+   DATABASE_URL="file:./prisma/dev.db"
+   GEMINI_API_KEY="your-gemini-api-key-here"
+   ```
+
+3. **Get your Gemini API Key:**
+   - Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Sign in with your Google account
+   - Click "Create API Key"
+   - Copy the key and paste it in your `.env` file
+
+4. **Set up the database:**
+   ```bash
+   npx prisma migrate dev
+   npx prisma generate
+   ```
+
+5. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 📁 Project Structure
+
+```
+├── prisma/
+│   ├── schema.prisma      # Database schema
+│   └── dev.db             # SQLite database
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── analyze/   # Food image analysis endpoint
+│   │   │   └── meals/     # Meal CRUD and stats endpoints
+│   │   ├── dashboard/     # Analytics dashboard page
+│   │   ├── history/       # Meal history page
+│   │   └── page.tsx       # Home page with upload
+│   ├── components/
+│   │   └── ui/            # shadcn/ui components
+│   └── lib/
+│       ├── gemini.ts      # Google Gemini AI integration
+│       ├── health-score.ts # Health scoring utilities
+│       └── prisma.ts      # Database client
+└── public/
+    └── uploads/           # Uploaded food images
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎯 How It Works
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Upload a Photo**: Drag and drop or click to upload a food image
+2. **AI Analysis**: Google Gemini Vision analyzes the image
+3. **Get Results**: Receive detailed nutritional information including:
+   - Dish name and ingredients
+   - Calories, protein, carbs, and fats
+   - Health score (0-100) with explanation
+4. **Track Progress**: View your meal history and nutrition trends
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔧 API Endpoints
 
-## Learn More
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/analyze` | POST | Upload and analyze a food image |
+| `/api/meals` | GET | Fetch meal history with pagination |
+| `/api/meals` | DELETE | Delete a meal by ID |
+| `/api/meals/stats` | GET | Get aggregated statistics |
 
-To learn more about Next.js, take a look at the following resources:
+## 📊 Health Score Guidelines
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Score | Rating | Description |
+|-------|--------|-------------|
+| 90-100 | Excellent | Very healthy, nutrient-dense, minimal processing |
+| 70-89 | Good | Healthy with minor concerns |
+| 50-69 | Moderate | Some healthy aspects but also concerns |
+| 30-49 | Below Average | Multiple nutritional concerns |
+| 0-29 | Poor | Highly processed, high sugar/sodium |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Tech Stack
 
-## Deploy on Vercel
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Database**: SQLite with Prisma ORM 7
+- **AI**: Google Gemini 1.5 Flash
+- **UI**: shadcn/ui + Tailwind CSS v4
+- **Charts**: Recharts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📝 Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | SQLite database path | Yes |
+| `GEMINI_API_KEY` | Google Gemini API key | Yes |
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+Built with ❤️ using Next.js and Google Gemini AI

@@ -1,65 +1,257 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { Apple, Clock, RefreshCw, Sparkles, TrendingUp } from "lucide-react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
+import { HealthScoreDisplay } from "@/components/health-score-display";
+import { ImageUploader } from "@/components/image-uploader";
+import { IngredientsList } from "@/components/ingredients-list";
+import { NutritionCard } from "@/components/nutrition-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
+type MealResult = {
+  id: string;
+  imageUrl: string;
+  dishName: string;
+  ingredients: string[];
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  fiber?: number | null;
+  sugar?: number | null;
+  sodium?: number | null;
+  healthScore: number;
+  analysis?: string | null;
+};
+
+export default function HomePage() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<MealResult | null>(null);
+
+  const analyzeImage = useCallback(async (file: File) => {
+    setIsAnalyzing(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to analyze image");
+      }
+
+      const data = await response.json();
+      setResult(data.meal);
+      toast.success("Analysis complete!", {
+        description: `${data.meal.dishName} - Health Score: ${data.meal.healthScore}`,
+      });
+    } catch (error) {
+      console.error("Analysis error:", error);
+      toast.error("Analysis failed", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, []);
+
+  const handleImageSelect = useCallback(
+    (file: File) => {
+      setSelectedFile(file);
+      setResult(null);
+
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+
+      // Auto-analyze
+      analyzeImage(file);
+    },
+    [analyzeImage]
+  );
+
+  const handleClear = useCallback(() => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setResult(null);
+  }, [previewUrl]);
+
+  const handleReanalyze = useCallback(() => {
+    if (selectedFile) {
+      setResult(null);
+      analyzeImage(selectedFile);
+    }
+  }, [selectedFile, analyzeImage]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-[calc(100vh-8rem)]">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-fuchsia-500/5 to-transparent" />
+        <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute right-1/4 bottom-0 h-96 w-96 rounded-full bg-fuchsia-500/10 blur-3xl" />
+
+        <div className="container relative mx-auto px-4 py-12">
+          <div className="mb-10 text-center">
+            <Badge
+              className="mb-4 border-violet-500/20 bg-violet-500/10 text-violet-600 dark:text-violet-400"
+              variant="secondary"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              <Sparkles className="mr-1 h-3 w-3" />
+              Powered by AI
+            </Badge>
+            <h1 className="mb-4 font-bold text-4xl md:text-5xl lg:text-6xl">
+              Analyze Your{" "}
+              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
+                Food Instantly
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+              Upload a photo of your meal and get instant AI-powered nutritional
+              analysis with a comprehensive health score.
+            </p>
+          </div>
+
+          {/* Upload Area */}
+          <div className="mx-auto max-w-2xl">
+            <ImageUploader
+              isLoading={isAnalyzing}
+              onClear={handleClear}
+              onImageSelect={handleImageSelect}
+              selectedImage={previewUrl}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            {previewUrl !== null && !isAnalyzing && !result ? (
+              <div className="mt-4 text-center">
+                <Button
+                  className="bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                  onClick={() => {
+                    if (selectedFile) {
+                      analyzeImage(selectedFile);
+                    }
+                  }}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Analyze This Meal
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Results Section */}
+      {result ? (
+        <section className="container mx-auto px-4 py-8">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="font-bold text-2xl">Analysis Results</h2>
+            <Button onClick={handleReanalyze} size="sm" variant="outline">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Re-analyze
+            </Button>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Health Score */}
+            <div className="lg:col-span-1">
+              <HealthScoreDisplay score={result.healthScore} />
+            </div>
+
+            {/* Nutrition */}
+            <div className="lg:col-span-2">
+              <NutritionCard
+                calories={result.calories}
+                carbs={result.carbs}
+                fats={result.fats}
+                fiber={result.fiber}
+                protein={result.protein}
+                sodium={result.sodium}
+                sugar={result.sugar}
+              />
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <IngredientsList
+              analysis={result.analysis}
+              dishName={result.dishName}
+              ingredients={result.ingredients}
+            />
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <Button
+              className="gap-2"
+              onClick={handleClear}
+              size="lg"
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Analyze Another Meal
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Features Section - only show when no result */}
+      {result || previewUrl ? null : (
+        <section className="container mx-auto px-4 py-16">
+          <div className="grid gap-6 md:grid-cols-3">
+            <Card className="group hover:-translate-y-1 transition-all hover:shadow-lg">
+              <CardContent className="p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-red-500 transition-transform group-hover:scale-110">
+                  <Apple className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-2 font-semibold text-lg">Instant Analysis</h3>
+                <p className="text-muted-foreground text-sm">
+                  Get detailed nutritional breakdown in seconds. Our AI
+                  identifies ingredients and calculates macros automatically.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:-translate-y-1 transition-all hover:shadow-lg">
+              <CardContent className="p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 transition-transform group-hover:scale-110">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-2 font-semibold text-lg">Health Score</h3>
+                <p className="text-muted-foreground text-sm">
+                  Each meal gets a 0-100 health score based on nutritional
+                  value, helping you make better food choices.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:-translate-y-1 transition-all hover:shadow-lg">
+              <CardContent className="p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-fuchsia-500 transition-transform group-hover:scale-110">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-2 font-semibold text-lg">Track Progress</h3>
+                <p className="text-muted-foreground text-sm">
+                  View your meal history and track your nutritional trends over
+                  time with beautiful charts and insights.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

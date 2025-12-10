@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Meal {
+  id          String   @id @default(cuid())
+  imageUrl    String
+  imagePath   String?
+  dishName    String
+  ingredients String // JSON string array of ingredients
+  calories    Float
+  protein     Float
+  carbs       Float
+  fats        Float
+  fiber       Float?
+  sugar       Float?
+  sodium      Float?
+  healthScore Int      // 0-100
+  analysis    String?  // Full AI analysis text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([healthScore])
+}
