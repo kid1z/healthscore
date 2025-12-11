@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { type NextRequest, NextResponse } from "next/server";
 import { analyzeFood } from "@/lib/gemini";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,9 +52,10 @@ export async function POST(request: NextRequest) {
     const meal = await prisma.meal.create({
       data: {
         imageUrl,
+        userId: 1,
         imagePath: filePath,
         dishName: analysis.dishName,
-        ingredients: JSON.stringify(analysis.ingredients),
+        ingredients: analysis.ingredients,
         calories: analysis.calories,
         protein: analysis.protein,
         carbs: analysis.carbs,
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
       success: true,
       meal: {
         ...meal,
-        ingredients: JSON.parse(meal.ingredients),
+        ingredients: meal.ingredients,
       },
     });
   } catch (error) {

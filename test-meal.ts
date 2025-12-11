@@ -1,4 +1,6 @@
-import prisma from "./src/lib/prisma";
+// use npx tsx test-meal.ts
+
+import { prisma } from "./src/lib/prisma";
 
 async function main() {
   try {
@@ -17,6 +19,7 @@ async function main() {
   } catch (error) {
     console.error("Connection failed:", error);
   } finally {
+    await prisma.$disconnect();
     process.exit(0);
   }
 }

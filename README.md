@@ -55,8 +55,8 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
 
 4. **Set up the database:**
    ```bash
-   pnpm prisma migrate dev
-   pnpm prisma generate
+   pmpx prisma migrate dev
+   pmpx prisma generate
    ```
 
 5. **Start the development server:**

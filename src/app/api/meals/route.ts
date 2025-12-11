@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,9 +82,9 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const id = Number.parseInt(searchParams.get("id") || "", 10);
 
-    if (!id) {
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "No meal ID provided" },
         { status: 400 }
