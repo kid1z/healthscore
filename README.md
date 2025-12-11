@@ -24,6 +24,7 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
 
 - Node.js 18+ installed
 - A Google Gemini API key (free tier available)
+- A Supabase project
 
 ### Installation
 
@@ -37,7 +38,12 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
    
    Create a `.env` file in the project root:
    ```env
-   DATABASE_URL="file:./prisma/dev.db"
+   # Connect to Supabase via connection pooling with Supavisor
+   DATABASE_URL="postgres://postgres.[your-project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+   # Direct connection to the database (required for migrations)
+   DIRECT_URL="postgres://postgres.[your-project-ref]:[password]@aws-0-[region].supabase.co:5432/postgres"
+
    GEMINI_API_KEY="your-gemini-api-key-here"
    ```
 
@@ -65,8 +71,7 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
 
 ```
 ├── prisma/
-│   ├── schema.prisma      # Database schema
-│   └── dev.db             # SQLite database
+│   └── schema.prisma      # Database schema
 ├── src/
 │   ├── app/
 │   │   ├── api/
@@ -118,7 +123,7 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
 
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
-- **Database**: SQLite with Prisma ORM 7
+- **Database**: PostgreSQL (Supabase) with Prisma ORM 7
 - **AI**: Google Gemini 1.5 Flash
 - **UI**: shadcn/ui + Tailwind CSS v4
 - **Charts**: Recharts
@@ -127,7 +132,8 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DATABASE_URL` | SQLite database path | Yes |
+| `DATABASE_URL` | Supabase connection pool URL | Yes |
+| `DIRECT_URL` | Supabase direct connection URL | Yes |
 | `GEMINI_API_KEY` | Google Gemini API key | Yes |
 
 ## 🤝 Contributing
