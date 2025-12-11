@@ -30,7 +30,7 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
 1. **Clone and install dependencies:**
    ```bash
    cd /path/to/project
-   npm install
+   pnpm install
    ```
 
 2. **Set up your environment variables:**
@@ -49,13 +49,13 @@ An intelligent food analysis application that uses Google Gemini AI to analyze f
 
 4. **Set up the database:**
    ```bash
-   npx prisma migrate dev
-   npx prisma generate
+   pnpm prisma migrate dev
+   pnpm prisma generate
    ```
 
 5. **Start the development server:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 6. **Open your browser:**

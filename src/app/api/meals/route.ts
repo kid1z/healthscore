@@ -39,10 +39,24 @@ export async function GET(request: NextRequest) {
       prisma.meal.count({ where }),
     ]);
 
-    const formattedMeals = meals.map((meal) => ({
-      ...meal,
-      ingredients: JSON.parse(meal.ingredients),
-    }));
+    const formattedMeals = meals.map((meal) => {
+      let ingredients = meal.ingredients;
+
+      // Only parse if it's a string
+      if (typeof ingredients === "string") {
+        try {
+          ingredients = JSON.parse(ingredients);
+        } catch {
+          // If parsing fails, keep original value
+          console.error("Failed to parse ingredients for meal:", meal.id);
+        }
+      }
+
+      return {
+        ...meal,
+        ingredients,
+      };
+    });
 
     return NextResponse.json({
       meals: formattedMeals,
@@ -56,7 +70,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching meals:", error);
     return NextResponse.json(
-      { error: "Failed to fetch meals" },
+      {
+        error: "Failed to fetch meals",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
