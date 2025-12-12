@@ -108,10 +108,9 @@ export function ImageUploader({
       const cleanup = () => {
         // biome-ignore lint/complexity/noForEach: <dont need>
         // biome-ignore lint/suspicious/useIterableCallbackReturn: <dont need>
-          stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
         overlay.remove();
       };
-
 
       closeBtn.onclick = cleanup;
 

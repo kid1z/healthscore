@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const analysis = await analyzeFood(base64, file.type);
 
     // Save image to public/uploads
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    const uploadsDir = path.join(process.cwd(), "tmp", "uploads");
     await mkdir(uploadsDir, { recursive: true });
 
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
