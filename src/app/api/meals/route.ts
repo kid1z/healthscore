@@ -82,9 +82,9 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = Number.parseInt(searchParams.get("id") || "", 10);
+    const id = searchParams.get("id");
 
-    if (Number.isNaN(id)) {
+    if (!id) {
       return NextResponse.json(
         { error: "No meal ID provided" },
         { status: 400 }

@@ -56,6 +56,102 @@ export function ImageUploader({
     [onImageSelect]
   );
 
+  const handleUploadImg = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment"; // Use "user" for front camera
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (file) {
+        onImageSelect(file);
+      }
+    };
+    input.click();
+  }, [onImageSelect]);
+
+  // use camera functionality to take photo using browser's camera API
+  const handleTakePhoto = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      video.autoplay = true;
+      video.playsInline = true;
+
+      // Create modal overlay
+      const overlay = document.createElement("div");
+      overlay.style.cssText =
+        "fixed;inset-0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;";
+
+      video.style.cssText = "max-width:100%;max-height:70vh;border-radius:8px;";
+
+      const captureBtn = document.createElement("button");
+      captureBtn.textContent = "📷 Capture";
+      captureBtn.style.cssText =
+        "margin-top:20px;padding:12px 32px;font-size:18px;border-radius:9999px;border:none;background:linear-gradient(to right,#8b5cf6,#d946ef);color:white;cursor:pointer;";
+
+      const closeBtn = document.createElement("button");
+      closeBtn.textContent = "✕ Cancel";
+      closeBtn.style.cssText =
+        "margin-top:12px;padding:8px 24px;font-size:14px;border-radius:9999px;border:1px solid #666;background:transparent;color:white;cursor:pointer;";
+
+      overlay.appendChild(video);
+      overlay.appendChild(captureBtn);
+      overlay.appendChild(closeBtn);
+      document.body.appendChild(overlay);
+
+      const cleanup = () => {
+        for (const track of stream.getTracks()) {
+          track.stop();
+        }
+        overlay.remove();
+      };
+
+      closeBtn.onclick = cleanup;
+
+      captureBtn.onclick = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d")?.drawImage(video, 0, 0);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const file = new File([blob], "camera-photo.jpg", {
+                type: "image/jpeg",
+              });
+              onImageSelect(file);
+            }
+            cleanup();
+          },
+          "image/jpeg",
+          0.9
+        );
+      };
+    } catch (error) {
+      console.error("Camera access denied:", error);
+      // Fallback to file input with capture
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.capture = "environment";
+      input.onchange = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+          onImageSelect(file);
+        }
+      };
+      input.click();
+    }
+  }, [onImageSelect]);
+
   if (selectedImage) {
     return (
       <Card className="group relative overflow-hidden">
@@ -139,13 +235,14 @@ export function ImageUploader({
 
           <div className="flex flex-wrap justify-center gap-3">
             <Button
-              className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600"
+              className="bg-linear-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600"
+              onClick={handleUploadImg}
               variant="default"
             >
               <ImageIcon className="mr-2 h-4 w-4" />
               Choose Image
             </Button>
-            <Button variant="outline">
+            <Button onClick={handleTakePhoto} variant="outline">
               <Camera className="mr-2 h-4 w-4" />
               Take Photo
             </Button>

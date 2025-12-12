@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
     "https://localhost:3000",
     "https://192.168.1.149:3000",
     "http://192.168.1.149:3000",
+    "10.0.73.26:3000",
   ],
 };
 

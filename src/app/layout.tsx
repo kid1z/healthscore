@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { PWAInit } from "@/components/pwa-init";
 import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({
-  variable: "--font-inter",
+const poppins = Poppins({
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-poppins",
   subsets: ["latin"],
 });
 
@@ -69,7 +70,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${poppins.variable} antialiased`}>
         <div className="relative flex min-h-screen flex-col bg-background">
           <PWAInit />
           <Navbar />
@@ -79,11 +80,11 @@ export default function RootLayout({
               <p className="text-muted-foreground text-sm">
                 Powered by{" "}
                 <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text font-semibold text-transparent">
-                  Google Gemini AI
+                  BoldSpark (Team 7)
                 </span>
               </p>
               <p className="text-muted-foreground text-sm">
-                © 2024 HealthScore. All rights reserved.
+                © 2025 HealthScore. All rights reserved.
               </p>
             </div>
           </footer>

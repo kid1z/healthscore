@@ -51,8 +51,11 @@ export async function POST(request: NextRequest) {
     // Save to database
     const meal = await prisma.meal.create({
       data: {
+        id: `meal-${Date.now()}`,
+        userId: "1",
         imageUrl,
-        userId: 1,
+        name: analysis.dishName,
+        updatedAt: new Date(),
         imagePath: filePath,
         dishName: analysis.dishName,
         ingredients: analysis.ingredients,
