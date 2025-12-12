@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+// import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { type NextRequest, NextResponse } from "next/server";
 import { analyzeFood } from "@/lib/gemini";
@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
     const analysis = await analyzeFood(base64, file.type);
 
     // Save image to public/uploads
-    const uploadsDir = path.join(process.cwd(), "tmp", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
+    const uploadsDir = path.join("/tmp", "uploads");
+    // await mkdir(uploadsDir, { recursive: true });
 
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
     const filePath = path.join(uploadsDir, fileName);
-    await writeFile(filePath, buffer);
+    // await writeFile(filePath, buffer);
 
     const imageUrl = `/uploads/${fileName}`;
 
