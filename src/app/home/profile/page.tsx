@@ -15,9 +15,10 @@ import {
 import { motion } from "motion/react";
 import { redirect } from "next/navigation";
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import Loading from "@/components/loading";
+import Thinking from "@/components/thinking";
 import { upsertUserProfile } from "../../bio/actions";
 
 // =================================================================
@@ -202,17 +203,14 @@ const BMRCard: React.FC<BMRCardProps> = ({ bmr }) => (
   </motion.div>
 );
 
-// =================================================================
-//                 COMPONENT CHÍNH (Gồm Header, Form, Footer)
-// =================================================================
-
-export default function ProfileSetupPage() {
+export default function ProfilePage() {
   const [fullName, setFullName] = useState("Alex Chen");
   const [gender, setGender] = useState<"Male" | "Female">("Male");
   const [age, setAge] = useState<number>(25);
   const [heightCm, setHeightCm] = useState<number>(175);
   const [weightKg, setWeightKg] = useState<number>(70);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
 
   const estimatedBMR = useMemo(
     () => calculateBMR({ weightKg, heightCm, age, gender }),
@@ -231,6 +229,15 @@ export default function ProfileSetupPage() {
     }
 
     setIsLoading(true);
+
+    console.log("Profile Data:", {
+      name: fullName.trim(),
+      gender,
+      age,
+      height: heightCm,
+      weight: weightKg,
+      bmr: estimatedBMR,
+    });
 
     try {
       const result = await upsertUserProfile({
@@ -260,8 +267,36 @@ export default function ProfileSetupPage() {
     }
   };
 
+  useEffect(() => {
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <na>
+    const fetchUserProfile = async () => {
+      setIsFetching(true);
+      try {
+        const response = await fetch("/api/profile");
+        if (response.ok) {
+          const data = await response.json();
+          if (data) {
+            setFullName(data.name || "");
+            setGender(data.gender || "Male");
+            setAge(data.age || 0);
+            setHeightCm(data.height || 0);
+            setWeightKg(data.weight || 0);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-gray-50 via-violet-50/30 to-fuchsia-50/30">
+      {/* overlay */}
+      <Thinking loading={isFetching} />
       {/* Decorative background elements */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="-top-40 -right-40 absolute h-80 w-80 rounded-full bg-violet-200/40 blur-3xl" />

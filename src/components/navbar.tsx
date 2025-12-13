@@ -12,7 +12,7 @@ const navItems = [
   { href: "/home", label: "Home", icon: House },
   { href: "/home/history", label: "History", icon: History },
   { href: "/home/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/home/bio", label: "Profile", icon: UserPen },
+  { href: "/home/profile", label: "Profile", icon: UserPen },
 ];
 
 export function Navbar() {
