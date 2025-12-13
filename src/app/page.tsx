@@ -110,12 +110,12 @@ export default function HomePage() {
           <div className="mb-10 text-center">
             <LayoutGroup>
               <motion.p
-                className="flex items-center justify-center gap-4 text-3xl md:text-4xl lg:text-5xl"
+                className="mb-2 flex items-center justify-center gap-4 text-3xl md:text-4xl lg:text-5xl"
                 layout
                 transition={{ type: "spring", damping: 30, stiffness: 400 }}
               >
                 <motion.span
-                  className="font-bold text-4xl text-stone-700 md:text-5xl lg:text-6xl dark:text-white"
+                  className="font-bold text-stone-700 md:text-5xl lg:text-6xl dark:text-white"
                   layout
                 >
                   Analyze Your
@@ -124,12 +124,12 @@ export default function HomePage() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: "-120%", opacity: 0 }}
                   initial={{ y: "100%", opacity: 0 }}
-                  mainClassName="px-2 sm:px-2 md:px-3 bg-violet-400/10 backdrop-blur-md text-violet-500 dark:text-violet-400 overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg font-bold text-4xl md:text-5xl lg:text-6xl"
+                  mainClassName="px-2 sm:px-2 md:px-3 bg-violet-400/10 backdrop-blur-md text-violet-500 dark:text-violet-400 overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg font-bold text-3xl md:text-5xl lg:text-6xl"
                   rotationInterval={2000}
                   splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
                   staggerDuration={0.025}
                   staggerFrom={"last"}
-                  texts={["Health", "Lunch", "Dinner", "Snacks"]}
+                  texts={["Health", "Meal", "Dinner", "Life"]}
                   transition={{ type: "spring", damping: 30, stiffness: 400 }}
                 />
               </motion.p>
