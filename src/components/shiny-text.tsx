@@ -5,7 +5,7 @@ type ShinyTextProps = {
   disabled?: boolean;
   speed?: number;
   className?: string;
-}
+};
 
 const ShinyText: React.FC<ShinyTextProps> = ({
   text,
