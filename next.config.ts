@@ -47,6 +47,16 @@ const nextConfig: NextConfig = {
     "http://192.168.1.149:3000",
     "10.0.73.26:3000",
   ],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

@@ -1,13 +1,14 @@
 "use client";
 
 import { Apple, Clock, RefreshCw, Sparkles, TrendingUp } from "lucide-react";
+import { LayoutGroup, motion } from "motion/react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { HealthScoreDisplay } from "@/components/health-score-display";
 import { ImageUploader } from "@/components/image-uploader";
 import { IngredientsList } from "@/components/ingredients-list";
 import { NutritionCard } from "@/components/nutrition-card";
-import { Badge } from "@/components/ui/badge";
+import RotatingText from "@/components/rotating-text";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -107,19 +108,38 @@ export default function HomePage() {
 
         <div className="container relative mx-auto px-4 py-12">
           <div className="mb-10 text-center">
-            <Badge
-              className="mb-4 border-violet-500/20 bg-violet-500/10 text-violet-600 dark:text-violet-400"
-              variant="secondary"
-            >
-              <Sparkles className="mr-1 h-3 w-3" />
-              Powered by AI
-            </Badge>
-            <h1 className="mb-4 font-bold text-4xl md:text-5xl lg:text-6xl">
+            <LayoutGroup>
+              <motion.p
+                className="flex items-center justify-center gap-4 text-3xl md:text-4xl lg:text-5xl"
+                layout
+                transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              >
+                <motion.span
+                  className="font-bold text-4xl text-stone-700 md:text-5xl lg:text-6xl dark:text-white"
+                  layout
+                >
+                  Analyze Your
+                </motion.span>
+                <RotatingText
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: "-120%", opacity: 0 }}
+                  initial={{ y: "100%", opacity: 0 }}
+                  mainClassName="px-2 sm:px-2 md:px-3 bg-violet-400/10 backdrop-blur-md text-violet-500 dark:text-violet-400 overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg font-bold text-4xl md:text-5xl lg:text-6xl"
+                  rotationInterval={2000}
+                  splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
+                  staggerDuration={0.025}
+                  staggerFrom={"last"}
+                  texts={["Health", "Lunch", "Dinner", "Snacks"]}
+                  transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                />
+              </motion.p>
+            </LayoutGroup>
+            {/* <h1 className="mb-4 font-bold text-4xl md:text-5xl lg:text-6xl">
               Analyze Your{" "}
-              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-pink-700 bg-clip-text text-transparent">
                 Food Instantly
               </span>
-            </h1>
+            </h1> */}
             <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
               Upload a photo of your meal and get instant AI-powered nutritional
               analysis with a comprehensive health score.

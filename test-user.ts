@@ -10,6 +10,7 @@ async function main() {
       name: "Alice2",
       email: "alice2@prisma.io",
       updatedAt: new Date(),
+      bmr: "1500",
     },
   });
   console.log("Created user:", user);

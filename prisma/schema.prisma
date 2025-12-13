@@ -44,4 +44,5 @@ model User {
   weight    Int?
   gender    String?
   Meal      Meal[]
+  bmr       String @default("")
 }

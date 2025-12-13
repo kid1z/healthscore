@@ -56,20 +56,20 @@ export function ImageUploader({
     [onImageSelect]
   );
 
-  // const handleUploadImg = useCallback(() => {
-  //   const input = document.createElement("input");
-  //   input.type = "file";
-  //   input.accept = "image/*";
-  //   input.capture = "environment"; // Use "user" for front camera
-  //   input.onchange = (e: Event) => {
-  //     const target = e.target as HTMLInputElement;
-  //     const file = target.files?.[0];
-  //     if (file) {
-  //       onImageSelect(file);
-  //     }
-  //   };
-  //   input.click();
-  // }, [onImageSelect]);
+  const handleUploadImg = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment"; // Use "user" for front camera
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (file) {
+        onImageSelect(file);
+      }
+    };
+    input.click();
+  }, [onImageSelect]);
 
   // use camera functionality to take photo using browser's camera API
   const handleTakePhoto = useCallback(async () => {
@@ -236,6 +236,7 @@ export function ImageUploader({
           <div className="flex flex-wrap justify-center gap-3">
             <Button
               className="bg-linear-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600"
+              onClick={handleUploadImg}
               variant="default"
             >
               <ImageIcon className="mr-2 h-4 w-4" />
