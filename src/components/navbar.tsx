@@ -1,6 +1,6 @@
 "use client";
 
-import { History, LayoutDashboard, Upload } from "lucide-react";
+import { History, House, LayoutDashboard, UserPen } from "lucide-react";
 import { LayoutGroup, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Analyze", icon: Upload },
+  { href: "/home", label: "Home", icon: House },
   { href: "/history", label: "History", icon: History },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/bio", label: "Profile", icon: UserPen },
 ];
 
 export function Navbar() {
@@ -23,7 +24,7 @@ export function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link className="group flex items-center gap-2" href="/">
+            <Link className="group flex items-center gap-2" href="/home">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl group-hover:shadow-violet-500/25">
                 {/* <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg transition-shadow group-hover:shadow-violet-500/25"> */}
                 {/* <Leaf className="h-5 w-5 text-white" /> */}

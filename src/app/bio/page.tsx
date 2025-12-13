@@ -253,7 +253,7 @@ export default function ProfileSetupPage() {
       `Profile setup complete! Estimated BMR: ${estimatedBMR} kcal/day.`
     );
 
-    redirect("/");
+    redirect("/home");
   };
 
   return (

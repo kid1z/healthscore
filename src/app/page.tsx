@@ -1,277 +1,152 @@
 "use client";
 
-import { Apple, Clock, RefreshCw, Sparkles, TrendingUp } from "lucide-react";
-import { LayoutGroup, motion } from "motion/react";
-import { useCallback, useState } from "react";
-import { toast } from "sonner";
-import { HealthScoreDisplay } from "@/components/health-score-display";
-import { ImageUploader } from "@/components/image-uploader";
-import { IngredientsList } from "@/components/ingredients-list";
-import { NutritionCard } from "@/components/nutrition-card";
-import RotatingText from "@/components/rotating-text";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "motion/react";
+// Bắt buộc phải có chỉ thị này vì component sử dụng React Hooks và tương tác (Link)
 
-type MealResult = {
-  id: string;
-  imageUrl: string;
-  dishName: string;
-  ingredients: string[];
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  fiber?: number | null;
-  sugar?: number | null;
-  sodium?: number | null;
-  healthScore: number;
-  analysis?: string | null;
+import Image from "next/image";
+import Link from "next/link";
+import type React from "react";
+
+// =================================================================
+//                 1. COMPONENT THANH ĐIỀU HƯỚNG DƯỚI (NAVBAR)
+// =================================================================
+
+const BottomNavbar: React.FC = () => {
+  // Component này mô phỏng thanh điều hướng cố định dưới cùng
+  return (
+    // Sử dụng fixed và max-w-lg để mô phỏng giao diện mobile
+    <nav className="fixed right-0 bottom-0 left-0 z-10 mx-auto max-w-lg border-gray-200 border-t bg-white p-4 shadow-xl">
+      <div className="flex items-center justify-around">
+        {/* Home */}
+        <NavItem href="/landing" icon="🏠" isActive={true} label="Home" />
+
+        {/* Camera (Nút trung tâm) */}
+        <div className="-top-6 relative">
+          <button className="rounded-full bg-gray-900 p-4 text-white shadow-2xl transition-colors hover:bg-gray-700">
+            {/* Icon Camera hoặc Scan */}
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.808-1.212A2 2 0 0110.424 4h3.152a2 2 0 011.664.89l.808 1.212a2 2 0 001.664.89H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+              />
+              <path
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Coach */}
+        <NavItem href="/coach" icon="🌿" isActive={false} label="Coach" />
+      </div>
+    </nav>
+  );
 };
 
-export default function HomePage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<MealResult | null>(null);
+interface NavItemProps {
+  icon: string;
+  label: string;
+  isActive: boolean;
+  href: string;
+}
 
-  const analyzeImage = useCallback(async (file: File) => {
-    setIsAnalyzing(true);
+const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, href }) => (
+  // Link là thẻ <a> trong Next.js
+  <Link className="text-center transition-colors" href={href}>
+    <span
+      className={`text-xl ${isActive ? "text-orange-500" : "text-gray-400"}`}
+    >
+      {icon}
+    </span>
+    <p
+      className={`font-medium text-xs ${isActive ? "text-orange-500" : "text-gray-400"}`}
+    >
+      {label}
+    </p>
+  </Link>
+);
 
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
+// =================================================================
+//                 2. COMPONENT CHÍNH (LANDING PAGE)
+// =================================================================
 
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to analyze image");
-      }
-
-      const data = await response.json();
-      setResult(data.meal);
-      toast.success("Analysis complete!", {
-        description: `${data.meal.dishName} - Health Score: ${data.meal.healthScore}`,
-      });
-    } catch (error) {
-      console.error("Analysis error:", error);
-      toast.error("Analysis failed", {
-        description:
-          error instanceof Error ? error.message : "Please try again",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, []);
-
-  const handleImageSelect = useCallback(
-    (file: File) => {
-      setSelectedFile(file);
-      setResult(null);
-
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-
-      // Auto-analyze
-      analyzeImage(file);
-    },
-    [analyzeImage]
-  );
-
-  const handleClear = useCallback(() => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setResult(null);
-  }, [previewUrl]);
-
-  const handleReanalyze = useCallback(() => {
-    if (selectedFile) {
-      setResult(null);
-      analyzeImage(selectedFile);
-    }
-  }, [selectedFile, analyzeImage]);
-
+export default function LandingPage() {
   return (
-    <div className="min-h-[calc(100vh-8rem)]">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-fuchsia-500/5 to-transparent" />
-        <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
-        <div className="absolute right-1/4 bottom-0 h-96 w-96 rounded-full bg-fuchsia-500/10 blur-3xl" />
-
-        <div className="container relative mx-auto px-4 py-12">
-          <div className="mb-10 text-center">
-            <LayoutGroup>
-              <motion.p
-                className="mb-2 flex items-center justify-center gap-4 text-3xl md:text-4xl lg:text-5xl"
-                layout
-                transition={{ type: "spring", damping: 30, stiffness: 400 }}
-              >
-                <motion.span
-                  className="font-bold text-stone-700 md:text-5xl lg:text-6xl dark:text-white"
-                  layout
-                >
-                  Analyze Your
-                </motion.span>
-                <RotatingText
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: "-120%", opacity: 0 }}
-                  initial={{ y: "100%", opacity: 0 }}
-                  mainClassName="px-2 sm:px-2 md:px-3 bg-violet-400/10 backdrop-blur-md text-violet-500 dark:text-violet-400 overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg font-bold text-3xl md:text-5xl lg:text-6xl"
-                  rotationInterval={2000}
-                  splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
-                  staggerDuration={0.025}
-                  staggerFrom={"last"}
-                  texts={["Health", "Meal", "Dinner", "Life"]}
-                  transition={{ type: "spring", damping: 30, stiffness: 400 }}
-                />
-              </motion.p>
-            </LayoutGroup>
-            {/* <h1 className="mb-4 font-bold text-4xl md:text-5xl lg:text-6xl">
-              Analyze Your{" "}
-              <span className="bg-pink-700 bg-clip-text text-transparent">
-                Food Instantly
-              </span>
-            </h1> */}
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-              Upload a photo of your meal and get instant AI-powered nutritional
-              analysis with a comprehensive health score.
-            </p>
-          </div>
-
-          {/* Upload Area */}
-          <div className="mx-auto max-w-2xl">
-            <ImageUploader
-              isLoading={isAnalyzing}
-              onClear={handleClear}
-              onImageSelect={handleImageSelect}
-              selectedImage={previewUrl}
-            />
-
-            {previewUrl !== null && !isAnalyzing && !result ? (
-              <div className="mt-4 text-center">
-                <Button
-                  className="bg-gradient-to-r from-violet-500 to-fuchsia-500"
-                  onClick={() => {
-                    if (selectedFile) {
-                      analyzeImage(selectedFile);
-                    }
-                  }}
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Analyze This Meal
-                </Button>
-              </div>
-            ) : null}
-          </div>
+    // Khung màn hình giả lập mobile
+    <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-between bg-white p-6">
+      {/* Vùng nội dung chính */}
+      <div className="mt-12 mb-20 flex flex-col items-center text-center">
+        {/* Ảnh minh họa (Placeholder) */}
+        <div className="mb-8 flex h-64 w-64 items-center justify-center overflow-hidden rounded-3xl bg-gray-100 shadow-lg">
+          {/*  */}
+          <Image
+            alt="hero"
+            className="h-full w-full object-cover"
+            height={256}
+            src="/uploads/WavingGirl.gif"
+            width={256}
+          />
         </div>
-      </section>
 
-      {/* Results Section */}
-      {result ? (
-        <section className="container mx-auto px-4 py-8">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-bold text-2xl">Analysis Results</h2>
-            <Button onClick={handleReanalyze} size="sm" variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Re-analyze
-            </Button>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Health Score */}
-            <div className="lg:col-span-1">
-              <HealthScoreDisplay score={result.healthScore} />
-            </div>
-
-            {/* Nutrition */}
-            <div className="lg:col-span-2">
-              <NutritionCard
-                calories={result.calories}
-                carbs={result.carbs}
-                fats={result.fats}
-                fiber={result.fiber}
-                protein={result.protein}
-                sodium={result.sodium}
-                sugar={result.sugar}
-              />
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <IngredientsList
-              analysis={result.analysis}
-              dishName={result.dishName}
-              ingredients={result.ingredients}
-            />
-          </div>
-
-          <div className="mt-6 flex justify-center">
-            <Button
-              className="gap-2"
-              onClick={handleClear}
-              size="lg"
-              variant="outline"
+        {/* Tiêu đề và Mô tả */}
+        <h1 className="mb-4 font-extrabold text-4xl text-gray-900 leading-tight">
+          Go see the new thing with{" "}
+          <div className="inline-flex items-center gap-2">
+            <span className="bg-linear-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+              CyberHealth
+            </span>{" "}
+            <svg
+              className="icon icon-tabler icons-tabler-filled icon-tabler-heart"
+              fill="#ff0000"
+              height="24"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <RefreshCw className="h-4 w-4" />
-              Analyze Another Meal
-            </Button>
+              <title>heart</title>
+              <path d="M0 0h24v24H0z" fill="none" stroke="none" />
+              <path d="M6.979 3.074a6 6 0 0 1 4.988 1.425l.037 .033l.034 -.03a6 6 0 0 1 4.733 -1.44l.246 .036a6 6 0 0 1 3.364 10.008l-.18 .185l-.048 .041l-7.45 7.379a1 1 0 0 1 -1.313 .082l-.094 -.082l-7.493 -7.422a6 6 0 0 1 3.176 -10.215z" />
+            </svg>
           </div>
-        </section>
-      ) : null}
+        </h1>
 
-      {/* Features Section - only show when no result */}
-      {result || previewUrl ? null : (
-        <section className="container mx-auto px-4 py-16">
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card className="group hover:-translate-y-1 transition-all hover:shadow-lg">
-              <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-red-500 transition-transform group-hover:scale-110">
-                  <Apple className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="mb-2 font-semibold text-lg">Instant Analysis</h3>
-                <p className="text-muted-foreground text-sm">
-                  Get detailed nutritional breakdown in seconds. Our AI
-                  identifies ingredients and calculates macros automatically.
-                </p>
-              </CardContent>
-            </Card>
+        <p className="mb-12 max-w-xs text-gray-500 text-lg">
+          Your personal AI Body Guard. <br />
+          Simple. Smart. Clean.
+        </p>
 
-            <Card className="group hover:-translate-y-1 transition-all hover:shadow-lg">
-              <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 transition-transform group-hover:scale-110">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="mb-2 font-semibold text-lg">Health Score</h3>
-                <p className="text-muted-foreground text-sm">
-                  Each meal gets a 0-100 health score based on nutritional
-                  value, helping you make better food choices.
-                </p>
-              </CardContent>
-            </Card>
+        {/* 2 buttons: new user or existing user */}
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="flex w-full max-w-xs flex-col gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Link href="/bio">
+            <motion.button
+              className="flex w-full transform items-center justify-center rounded-full bg-linear-to-r from-violet-500 to-fuchsia-500 px-8 py-3 font-semibold text-md text-white shadow-md transition-colors hover:bg-fuchsia-600"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              New User →
+            </motion.button>
+          </Link>
+        </motion.div>
+      </div>
 
-            <Card className="group hover:-translate-y-1 transition-all hover:shadow-lg">
-              <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-fuchsia-500 transition-transform group-hover:scale-110">
-                  <Clock className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="mb-2 font-semibold text-lg">Track Progress</h3>
-                <p className="text-muted-foreground text-sm">
-                  View your meal history and track your nutritional trends over
-                  time with beautiful charts and insights.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      )}
+      {/* Tạo khoảng trống ở cuối để Navbar không bị che mất nội dung */}
+      {/* <div className="h-10" /> */}
     </div>
   );
 }

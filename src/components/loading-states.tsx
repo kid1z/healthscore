@@ -79,7 +79,7 @@ export function EmptyState({ type }: { type: "history" | "dashboard" }) {
             ? "Upload your first food photo to start tracking your nutritional journey."
             : "Analyze some meals to see your health statistics and trends here."}
         </p>
-        <Link href="/">
+        <Link href="/home">
           <Button className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600">
             <Upload className="mr-2 h-4 w-4" />
             Analyze Your First Meal

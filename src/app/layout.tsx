@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/navbar";
 import { PWAInit } from "@/components/pwa-init";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -73,21 +72,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} antialiased`}>
         <div className="relative flex min-h-screen flex-col bg-background">
           <PWAInit />
-          <Navbar />
           <main className="flex-1">{children}</main>
-          <footer className="border-t py-6 md:py-0">
-            <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 md:h-16 md:flex-row">
-              <p className="text-muted-foreground text-sm">
-                Powered by{" "}
-                <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text font-semibold text-transparent">
-                  BoldSpark (Team 7)
-                </span>
-              </p>
-              <p className="text-muted-foreground text-sm">
-                © 2025 HealthScore. All rights reserved.
-              </p>
-            </div>
-          </footer>
         </div>
         <Toaster position="top-center" richColors />
       </body>

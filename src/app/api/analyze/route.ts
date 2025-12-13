@@ -1,8 +1,15 @@
-// import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
+import { toast } from "sonner";
 import { analyzeFood } from "@/lib/gemini";
 import { prisma } from "@/lib/prisma";
+
+export const runtime = "nodejs";
+
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,15 +45,46 @@ export async function POST(request: NextRequest) {
     // Analyze with Gemini
     const analysis = await analyzeFood(base64, file.type);
 
-    // Save image to public/uploads
-    const uploadsDir = path.join("/tmp", "uploads");
-    // await mkdir(uploadsDir, { recursive: true });
+    const bucket = "images";
 
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    const filePath = path.join(uploadsDir, fileName);
-    // await writeFile(filePath, buffer);
 
-    const imageUrl = `/uploads/${fileName}`;
+    const pathS3 = `uploads/${fileName}`;
+
+    const { data, error } = await supabaseAdmin.storage
+      .from("images")
+      .createSignedUploadUrl(pathS3);
+
+    if (error || !data) {
+      toast.error("Supabase upload URL error");
+      throw new Error("Failed to get upload URL");
+    }
+
+    // Upload to Supabase Storage
+    const uploadResponse = await fetch(data.signedUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: buffer,
+    });
+
+    if (!uploadResponse.ok) {
+      toast.error("Supabase upload error");
+      throw new Error("Failed to upload image");
+    }
+
+    // Get public URL
+    const { data: pub, error: pubError } = supabaseAdmin.storage
+      .from(bucket)
+      .getPublicUrl(pathS3);
+
+    if (pubError) {
+      toast.error("Supabase public URL error:", pubError);
+      throw new Error("Failed to get public URL");
+    }
+
+    const imageUrl = pub?.publicUrl ?? null;
 
     // Save to database
     const meal = await prisma.meal.create({
@@ -56,7 +94,7 @@ export async function POST(request: NextRequest) {
         imageUrl,
         name: analysis.dishName,
         updatedAt: new Date(),
-        imagePath: filePath,
+        imagePath: imageUrl,
         dishName: analysis.dishName,
         ingredients: analysis.ingredients,
         calories: analysis.calories,
