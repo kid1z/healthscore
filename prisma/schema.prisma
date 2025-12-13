@@ -33,15 +33,24 @@ model Meal {
 }
 
 model User {
-  id        String   @id
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String @unique
-  device    String?
-  age       Int?
-  height    Int?
-  weight    Int?
-  gender    String?
-  Meal      Meal[]
-  bmr       String @default("")
+  id         String      @id
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime
+  name       String      @unique
+  device     String?
+  age        Int?
+  height     Int?
+  weight     Int?
+  gender     String?
+  bmr        String      @default("")
+  Meal       Meal[]
+  excercises Excercise[]
+}
+
+model Excercise {
+  id      String @id
+  Step    Int?
+  Sitting Int?
+  userId  String
+  User    User   @relation(fields: [userId], references: [id])
 }
