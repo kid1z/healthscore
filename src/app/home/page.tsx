@@ -110,7 +110,7 @@ export default function HomePage() {
           <div className="mb-10 text-center">
             <LayoutGroup>
               <motion.p
-                className="mb-2 flex items-center justify-center gap-4 text-3xl md:text-4xl lg:text-5xl"
+                className="mb-2 flex items-center justify-center gap-2 text-3xl md:text-4xl lg:text-5xl"
                 layout
                 transition={{ type: "spring", damping: 30, stiffness: 400 }}
               >

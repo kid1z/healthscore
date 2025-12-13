@@ -205,7 +205,7 @@ export function ImageUploader({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <CardContent className="p-12">
+      <CardContent className="p-3">
         <label className="flex cursor-pointer flex-col items-center justify-center">
           <div className="relative mb-6">
             <div

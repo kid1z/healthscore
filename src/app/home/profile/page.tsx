@@ -294,26 +294,23 @@ export default function ProfilePage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-gray-50 via-violet-50/30 to-fuchsia-50/30">
+    <div className="flex flex-col">
       {/* overlay */}
       <Thinking loading={isFetching} />
-      {/* Decorative background elements */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="-top-40 -right-40 absolute h-80 w-80 rounded-full bg-violet-200/40 blur-3xl" />
-        <div className="-bottom-40 -left-40 absolute h-80 w-80 rounded-full bg-fuchsia-200/40 blur-3xl" />
-      </div>
 
       {/* Nội dung Form Profile Setup */}
-      <main className="relative z-10 flex w-full justify-center p-4 pb-24 sm:p-6">
+      <main className="container mx-auto p-4">
+        <header className="mb-6 flex justify-between">
+          <h1 className="flex items-center gap-3 font-bold text-2xl">
+            Profile
+          </h1>
+        </header>
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md rounded-2xl border border-white/50 bg-white/80 p-6 shadow-md backdrop-blur-lg sm:p-6"
+          className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-md backdrop-blur-lg sm:p-6"
           initial={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <h1 className="mb-3 bg-linear-to-r from-violet-600 to-fuchsia-600 bg-clip-text font-bold text-3xl text-transparent">
-            Profile
-          </h1>
           <div className="space-y-5">
             {/* FULL NAME */}
             <InputField
