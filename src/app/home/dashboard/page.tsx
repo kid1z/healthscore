@@ -368,6 +368,7 @@ export default function Page() {
   const [burned, setBurned] = useState(steps * 0.05);
   const [lastSyncSteps, setLastSyncSteps] = useState(0);
   const [user, setUser] = useState<UserTodayResponse["user"] | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [goal, _] = useState(2000);
   const [inTake, setInTake] = useState(1000);
@@ -379,7 +380,7 @@ export default function Page() {
     const userId = "b2e41dd8-74aa-4aec-a503-111d2f49461f";
 
     async function fetchData() {
-      // setLoading(true);
+      setLoading(true);
       const data = await getUserAndTodayMeals(userId);
       console.log("Fetched user today data:", data);
       if (data) {
@@ -390,7 +391,7 @@ export default function Page() {
         setCaloLeft(goal + burned - data.totalIntake);
         setNetEnergy(data.totalIntake - (bmr + burned));
       }
-      // setLoading(false);
+      setLoading(false);
     }
 
     fetchData();
@@ -398,16 +399,20 @@ export default function Page() {
 
   return (
     <main className="container mx-auto min-h-screen bg-gray-50 p-6">
-      <header className="mb-6 flex justify-between">
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-xl">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-violet-600" />
+            <p className="font-medium text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      )}
+      {/* <header className="mb-6 flex justify-between">
         <h1 className="font-bold text-3xl">Dashboard</h1>
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
           <div className="h-6 w-6 rounded-full bg-purple-500" />
         </div>
-      </header>
-
-      {/* <BodyBattery 
-      
-      /> */}
+      </header> */}
       <CircularGauge caloLeft={caloLeft} goal={goal} />
 
       <div className="mt-6 grid grid-cols-3 gap-3">

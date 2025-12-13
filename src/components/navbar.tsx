@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/home", label: "Home", icon: House },
-  { href: "/history", label: "History", icon: History },
-  { href: "/dashboard_2", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/bio", label: "Profile", icon: UserPen },
+  { href: "/home/history", label: "History", icon: History },
+  { href: "/home/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/home/bio", label: "Profile", icon: UserPen },
 ];
 
 export function Navbar() {
