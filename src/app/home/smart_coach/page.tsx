@@ -1,77 +1,56 @@
-import { Droplet, TriangleAlert, Utensils } from "lucide-react";
-import type { ReactNode } from "react";
+"use client";
 
-function StatusCard() {
-  return (
-    <div className="rounded-2xl bg-green-500 p-5 text-white shadow-md">
-      <p className="text-sm opacity-80">Current Status</p>
-      <h2 className="mt-1 font-bold text-xl">You are on track! 🔥</h2>
-      <p className="mt-1 text-sm">
-        You have enough budget for a proper dinner.
-      </p>
-    </div>
-  );
-}
+import { useMemo } from "react";
+import Thinking from "@/components/thinking";
+import { CurrentStatusCard } from "./components/current-status-card";
+import { NoSuggestions } from "./components/no-suggestions";
+import { SimpleModal } from "./components/simple-modal";
+import { useCoachData } from "./hooks/use-coach-data";
+import { useModal } from "./hooks/use-modal";
+import { generateSuggestions } from "./utils/generate-suggestions";
+import { getStatusInfo } from "./utils/get-status-info";
 
-function SuggestionCard({
-  icon,
-  title,
-  description,
-  accent,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  accent?: string;
-}) {
-  return (
-    <div
-      className={`flex items-start rounded-2xl border-l-4 bg-white p-4 shadow-sm ${accent}`}
-    >
-      <div className="mr-3 text-xl">{icon}</div>
-      <div>
-        <h3 className="font-semibold">{title}</h3>
-        <p className="text-gray-500 text-sm">{description}</p>
-      </div>
-    </div>
-  );
-}
-
+// --- Component Trang chính (CoachPage) ---
 export default function CoachPage() {
+  const { data, isLoading } = useCoachData();
+  const modal = useModal();
+
+  const status = useMemo(() => getStatusInfo(data.netEnergy), [data.netEnergy]);
+  const suggestions = useMemo(
+    () => generateSuggestions(data, modal.open),
+    [data, modal.open]
+  );
+
+  // if (isLoading) {
+  //   return <Thinking loading={true} />;
+  // }
+
+  console.log("data: ", data);
+
   return (
-    <main className="min-h-screen bg-gray-50 px-5 pb-24">
-      <header className="pt-10">
+    <main className="px-5 pb-24">
+      <Thinking loading={isLoading} />
+      <header className="pt-4">
         <h1 className="font-bold text-3xl">Smart Coach</h1>
       </header>
 
       <section className="mt-6">
-        <StatusCard />
+        <CurrentStatusCard status={status} />
       </section>
 
       <h2 className="mt-8 font-semibold text-lg">AI Suggestions</h2>
-
       <div className="mt-3 space-y-4">
-        <SuggestionCard
-          accent="border-yellow-400"
-          description="Your breakfast had high sugar. Avoid sweets this afternoon."
-          icon={<TriangleAlert className="text-yellow-500" />}
-          title="Sugar Alert"
-        />
-
-        <SuggestionCard
-          accent="border-blue-400"
-          description="You walked 5k steps. Drink 250ml water now."
-          icon={<Droplet className="text-blue-500" />}
-          title="Hydration Check"
-        />
-
-        <SuggestionCard
-          accent="border-purple-400"
-          description="Try Salmon + Asparagus to meet your protein goal."
-          icon={<Utensils className="text-purple-500" />}
-          title="Dinner Idea"
-        />
+        {suggestions.length > 0 ? suggestions : <NoSuggestions />}
       </div>
+
+      <SimpleModal
+        bgColor={status.bg}
+        isOpen={modal.isOpen}
+        onClose={modal.close}
+        title={modal.content.title}
+      >
+        <p className="text-fuchsia-600">{modal.content.detail}</p>
+      </SimpleModal>
     </main>
   );
 }

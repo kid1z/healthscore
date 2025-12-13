@@ -211,7 +211,7 @@ type UserTodayResponse = {
   } | null;
 };
 
-async function getUserAndTodayMeals(
+export async function getUserAndTodayMeals(
   userId: string
 ): Promise<UserTodayResponse | null> {
   try {
