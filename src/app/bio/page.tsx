@@ -1,3 +1,6 @@
+/** biome-ignore-all lint/nursery/noLeakedRender: <ba> */
+/** biome-ignore-all lint/a11y/noLabelWithoutControl: <na> */
+/** biome-ignore-all lint/style/useConsistentTypeDefinitions: <na> */
 "use client";
 
 import {
@@ -10,7 +13,6 @@ import {
   Users,
 } from "lucide-react";
 import { motion } from "motion/react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import type React from "react";
 import { useMemo, useState } from "react";
@@ -50,29 +52,6 @@ const calculateBMR = ({
 };
 
 // --- Components Phụ trợ (Dùng chung cho cả Form và Navbar) ---
-
-// biome-ignore lint/style/useConsistentTypeDefinitions: <na>
-interface NavItemProps {
-  icon: string;
-  label: string;
-  isActive: boolean;
-  href: string;
-}
-
-const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, href }) => (
-  <Link className="flex flex-col items-center transition-colors" href={href}>
-    <span
-      className={`text-xl ${isActive ? "text-orange-500" : "text-gray-400"}`}
-    >
-      {icon}
-    </span>
-    <p
-      className={`font-medium text-xs ${isActive ? "text-orange-500" : "text-gray-400"}`}
-    >
-      {label}
-    </p>
-  </Link>
-);
 
 // Component InputField with Icon
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -165,6 +144,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
+          <title>chevron down</title>
           <path
             d="M19 9l-7 7-7-7"
             strokeLinecap="round"

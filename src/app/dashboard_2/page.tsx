@@ -1,7 +1,8 @@
 /** biome-ignore-all lint/style/useConsistentTypeDefinitions: <NA> */
-/** biome-ignore-all lint/correctness/useImageSize: <explanation> */
-/** biome-ignore-all lint/performance/noImgElement: <explanation> */
-/** biome-ignore-all lint/a11y/useButtonType: <explanation> */
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: <na> */
+/** biome-ignore-all lint/correctness/useImageSize: <na> */
+/** biome-ignore-all lint/performance/noImgElement: <na> */
+/** biome-ignore-all lint/a11y/useButtonType: <na> */
 import Link from "next/link";
 
 function BodyBattery() {

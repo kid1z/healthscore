@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <na> */
 import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { toast } from "sonner";
@@ -75,14 +76,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Get public URL
-    const { data: pub, error: pubError } = supabaseAdmin.storage
+    const { data: pub } = supabaseAdmin.storage
       .from(bucket)
       .getPublicUrl(pathS3);
-
-    if (pubError) {
-      toast.error("Supabase public URL error:", pubError);
-      throw new Error("Failed to get public URL");
-    }
 
     const imageUrl = pub?.publicUrl ?? null;
 

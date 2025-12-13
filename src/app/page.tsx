@@ -1,81 +1,13 @@
+/** biome-ignore-all lint/style/useConsistentTypeDefinitions: <ba> */
 "use client";
 
 import { motion } from "motion/react";
-// Bắt buộc phải có chỉ thị này vì component sử dụng React Hooks và tương tác (Link)
-
 import Image from "next/image";
 import Link from "next/link";
-import type React from "react";
 
 // =================================================================
 //                 1. COMPONENT THANH ĐIỀU HƯỚNG DƯỚI (NAVBAR)
 // =================================================================
-
-const BottomNavbar: React.FC = () => {
-  // Component này mô phỏng thanh điều hướng cố định dưới cùng
-  return (
-    // Sử dụng fixed và max-w-lg để mô phỏng giao diện mobile
-    <nav className="fixed right-0 bottom-0 left-0 z-10 mx-auto max-w-lg border-gray-200 border-t bg-white p-4 shadow-xl">
-      <div className="flex items-center justify-around">
-        {/* Home */}
-        <NavItem href="/landing" icon="🏠" isActive={true} label="Home" />
-
-        {/* Camera (Nút trung tâm) */}
-        <div className="-top-6 relative">
-          <button className="rounded-full bg-gray-900 p-4 text-white shadow-2xl transition-colors hover:bg-gray-700">
-            {/* Icon Camera hoặc Scan */}
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.808-1.212A2 2 0 0110.424 4h3.152a2 2 0 011.664.89l.808 1.212a2 2 0 001.664.89H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-              />
-              <path
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Coach */}
-        <NavItem href="/coach" icon="🌿" isActive={false} label="Coach" />
-      </div>
-    </nav>
-  );
-};
-
-interface NavItemProps {
-  icon: string;
-  label: string;
-  isActive: boolean;
-  href: string;
-}
-
-const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, href }) => (
-  // Link là thẻ <a> trong Next.js
-  <Link className="text-center transition-colors" href={href}>
-    <span
-      className={`text-xl ${isActive ? "text-orange-500" : "text-gray-400"}`}
-    >
-      {icon}
-    </span>
-    <p
-      className={`font-medium text-xs ${isActive ? "text-orange-500" : "text-gray-400"}`}
-    >
-      {label}
-    </p>
-  </Link>
-);
 
 // =================================================================
 //                 2. COMPONENT CHÍNH (LANDING PAGE)
