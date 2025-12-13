@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const meal = await prisma.meal.create({
       data: {
         id: `meal-${Date.now()}`,
-        userId: "1",
+        userId: "b2e41dd8-74aa-4aec-a503-111d2f49461f",
         imageUrl,
         name: analysis.dishName,
         updatedAt: new Date(),
