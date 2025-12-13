@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { USER_ID } from "../constants";
 
 type ProfileData = {
   name: string;
@@ -23,7 +24,7 @@ export async function upsertUserProfile(data: ProfileData) {
         bmr: data.bmr,
       },
       create: {
-        id: crypto.randomUUID(),
+        id: USER_ID,
         name: data.name,
         gender: data.gender,
         age: data.age,

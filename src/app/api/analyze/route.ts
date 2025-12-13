@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { toast } from "sonner";
+import { USER_ID } from "@/app/constants";
 import { analyzeFood } from "@/lib/gemini";
 import { prisma } from "@/lib/prisma";
 
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
     const meal = await prisma.meal.create({
       data: {
         id: `meal-${Date.now()}`,
-        userId: "b2e41dd8-74aa-4aec-a503-111d2f49461f",
+        userId: USER_ID,
         imageUrl,
         name: analysis.dishName,
         updatedAt: new Date(),
@@ -102,6 +103,28 @@ export async function POST(request: NextRequest) {
         sodium: analysis.sodium,
         healthScore: analysis.healthScore,
         analysis: analysis.analysis,
+      },
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // save exercise to daily exercise table
+    await prisma.exercise.upsert({
+      where: {
+        userId_date: {
+          userId: USER_ID,
+          date: today,
+        },
+      },
+      update: {},
+      create: {
+        id: `exercise-${Date.now()}`,
+        step: 0,
+        sitting: 0,
+        burned: 0,
+        userId: USER_ID,
+        date: today,
       },
     });
 
