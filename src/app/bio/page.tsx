@@ -247,7 +247,6 @@ export default function ProfileSetupPage() {
             ? `Profile created! Estimated BMR: ${estimatedBMR} kcal/day.`
             : `Profile updated! Estimated BMR: ${estimatedBMR} kcal/day.`
         );
-        redirect("/home");
       } else {
         toast.error(result.error || "Failed to save profile.");
       }
@@ -256,6 +255,7 @@ export default function ProfileSetupPage() {
       console.error(error);
     } finally {
       setIsLoading(false);
+      redirect("/home");
     }
   };
 
