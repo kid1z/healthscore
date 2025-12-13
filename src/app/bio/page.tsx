@@ -1,7 +1,20 @@
-'use client'; 
+"use client";
 
-import React, { useState, useMemo } from 'react';
-import Link from 'next/link'; // Cần thiết cho Navbar
+import {
+  Activity,
+  Calendar,
+  ChevronRight,
+  Ruler,
+  Scale,
+  User,
+  Users,
+} from "lucide-react";
+import { motion } from "motion/react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import type React from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 // =================================================================
 //                 LOGIC TÍNH TOÁN BMR (Không đổi)
@@ -10,232 +23,348 @@ interface BMRParams {
   weightKg: number;
   heightCm: number;
   age: number;
-  gender: 'Male' | 'Female' | '';
+  gender: "Male" | "Female" | "";
 }
 
-const calculateBMR = ({ weightKg, heightCm, age, gender }: BMRParams): number | null => {
-  if (weightKg <= 0 || heightCm <= 0 || age <= 0 || (gender !== 'Male' && gender !== 'Female')) {
+const calculateBMR = ({
+  weightKg,
+  heightCm,
+  age,
+  gender,
+}: BMRParams): number | null => {
+  if (
+    weightKg <= 0 ||
+    heightCm <= 0 ||
+    age <= 0 ||
+    (gender !== "Male" && gender !== "Female")
+  ) {
     return null;
   }
   let bmr: number;
-  if (gender === 'Male') {
-    bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) + 5;
+  if (gender === "Male") {
+    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
   } else {
-    bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) - 161;
+    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
   }
   return Math.round(bmr);
 };
 
 // --- Components Phụ trợ (Dùng chung cho cả Form và Navbar) ---
 
+// biome-ignore lint/style/useConsistentTypeDefinitions: <na>
 interface NavItemProps {
-    icon: string;
-    label: string;
-    isActive: boolean;
-    href: string;
+  icon: string;
+  label: string;
+  isActive: boolean;
+  href: string;
 }
 
 const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, href }) => (
-    <Link href={href} className="flex flex-col items-center transition-colors">
-        <span className={`text-xl ${isActive ? 'text-orange-500' : 'text-gray-400'}`}>{icon}</span>
-        <p className={`text-xs font-medium ${isActive ? 'text-orange-500' : 'text-gray-400'}`}>{label}</p>
-    </Link>
+  <Link className="flex flex-col items-center transition-colors" href={href}>
+    <span
+      className={`text-xl ${isActive ? "text-orange-500" : "text-gray-400"}`}
+    >
+      {icon}
+    </span>
+    <p
+      className={`font-medium text-xs ${isActive ? "text-orange-500" : "text-gray-400"}`}
+    >
+      {label}
+    </p>
+  </Link>
 );
 
-const BottomNavbar: React.FC = () => {
-    return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-xl border-t border-gray-200 p-4 max-w-lg mx-auto w-full z-10">
-            <div className="flex justify-around items-center">
-                <NavItem icon="🏠" label="Home" isActive={false} href="/landing" />
-                
-                <div className="relative -top-6">
-                    <button className="bg-gray-900 text-white rounded-full p-4 shadow-2xl hover:bg-gray-700 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.808-1.212A2 2 0 0110.424 4h3.152a2 2 0 011.664.89l.808 1.212a2 2 0 001.664.89H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <NavItem icon="🌿" label="Coach" isActive={true} href="/coach" />
-            </div>
-        </nav>
-    );
-};
-
-
-// Component InputField
+// Component InputField with Icon
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
+  icon?: React.ReactNode;
+  delay?: number;
 }
 
-const InputField: React.FC<InputFieldProps> = ({ label, className, ...props }) => (
-  <div className={className}>
-    <label className="text-xs font-semibold text-gray-500 block mb-1">{label}</label>
-    <input
-      {...props}
-      className={`w-full p-3 border border-gray-300 rounded-lg text-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900`}
-    />
-  </div>
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  icon,
+  delay = 0,
+  className,
+  ...props
+}) => (
+  <motion.div
+    animate={{ opacity: 1, y: 0 }}
+    className={className}
+    initial={{ opacity: 0, y: 20 }}
+    transition={{ duration: 0.4, delay }}
+  >
+    <label className="mb-2 block font-semibold text-gray-500 text-xs tracking-wider">
+      {label}
+    </label>
+    <div className="group relative">
+      {icon && (
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+          <span className="text-gray-400 transition-colors group-focus-within:text-violet-500">
+            {icon}
+          </span>
+        </div>
+      )}
+      <input
+        {...props}
+        className={`w-full rounded-xl border-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white p-3 font-medium text-gray-800 text-md transition-all duration-300 placeholder:text-gray-400 hover:border-gray-300 hover:shadow-md focus:border-violet-500 focus:outline-none focus:ring-4 focus:ring-violet-500/10 ${icon ? "pl-12" : ""}`}
+      />
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500/0 via-fuchsia-500/0 to-violet-500/0 opacity-0 transition-opacity duration-300 group-focus-within:opacity-10" />
+    </div>
+  </motion.div>
 );
 
-// Component SelectField
-interface SelectFieldProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+// Component SelectField with Icon
+interface SelectFieldProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
   options: string[];
+  icon?: React.ReactNode;
+  delay?: number;
 }
 
-const SelectField: React.FC<SelectFieldProps> = ({ label, options, className, ...props }) => (
-  <div className={className}>
-    <label className="text-xs font-semibold text-gray-500 block mb-1">{label}</label>
-    <select
-      {...props}
-      className="w-full p-3 border border-gray-300 rounded-lg text-lg font-medium text-gray-800 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-gray-900"
-    >
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-  </div>
+const SelectField: React.FC<SelectFieldProps> = ({
+  label,
+  options,
+  icon,
+  delay = 0,
+  className,
+  ...props
+}) => (
+  <motion.div
+    animate={{ opacity: 1, y: 0 }}
+    className={className}
+    initial={{ opacity: 0, y: 20 }}
+    transition={{ duration: 0.4, delay }}
+  >
+    <label className="mb-2 block font-semibold text-gray-500 text-xs tracking-wider">
+      {label}
+    </label>
+    <div className="group relative">
+      {icon && (
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+          <span className="text-gray-400 transition-colors group-focus-within:text-violet-500">
+            {icon}
+          </span>
+        </div>
+      )}
+      <select
+        {...props}
+        className={`w-full appearance-none rounded-xl border-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white p-3 font-medium text-gray-800 text-md transition-all duration-300 hover:border-gray-300 hover:shadow-md focus:border-violet-500 focus:outline-none focus:ring-4 focus:ring-violet-500/10 ${icon ? "pl-12" : ""}`}
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+        <svg
+          className="h-5 w-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M19 9l-7 7-7-7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+          />
+        </svg>
+      </div>
+    </div>
+  </motion.div>
 );
 
-// Component BMRCard
+// Component BMRCard with Animation
 interface BMRCardProps {
   bmr: number | null;
 }
 
 const BMRCard: React.FC<BMRCardProps> = ({ bmr }) => (
-  <div className="mt-8 p-6 rounded-xl bg-green-50/70 border border-green-200">
-    <div className="flex justify-between items-center text-green-700 font-semibold mb-2">
-      <span className="text-sm">ESTIMATED BMR</span>
-      <span title="Basal Metabolic Rate: calories burned at rest">ⓘ</span>
+  <motion.div
+    animate={{ opacity: 1, scale: 1 }}
+    className="mt-8 overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-6 shadow-md"
+    initial={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.5, delay: 0.6 }}
+  >
+    <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
+          <Activity className="h-4 w-4 text-emerald-600" />
+        </div>
+        <span className="font-bold text-emerald-700 text-sm tracking-wide">
+          ESTIMATED BMR
+        </span>
+      </div>
+      <span
+        className="cursor-help text-emerald-600"
+        title="Basal Metabolic Rate: calories burned at rest"
+      >
+        ⓘ
+      </span>
     </div>
     <div className="text-center">
-      <p className="text-6xl font-extrabold text-green-600">
-        {bmr !== null ? bmr.toLocaleString() : '---'}
-      </p>
-      <p className="text-lg text-green-700 font-medium">
-        kcal / day
-      </p>
+      <motion.p
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text font-extrabold text-6xl text-transparent"
+        initial={{ scale: 0.8, opacity: 0 }}
+        key={bmr}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        {bmr !== null ? bmr.toLocaleString() : "---"}
+      </motion.p>
+      <p className="mt-1 font-medium text-emerald-600 text-lg">kcal / day</p>
     </div>
-  </div>
+  </motion.div>
 );
-
 
 // =================================================================
 //                 COMPONENT CHÍNH (Gồm Header, Form, Footer)
 // =================================================================
 
 export default function ProfileSetupPage() {
-  const [fullName, setFullName] = useState('Alex Chen');
-  const [gender, setGender] = useState<'Male' | 'Female'>('Male'); 
+  const [fullName, setFullName] = useState("Alex Chen");
+  const [gender, setGender] = useState<"Male" | "Female">("Male");
   const [age, setAge] = useState<number>(25);
   const [heightCm, setHeightCm] = useState<number>(175);
   const [weightKg, setWeightKg] = useState<number>(70);
 
-  const estimatedBMR = useMemo(() => {
-    return calculateBMR({ weightKg, heightCm, age, gender });
-  }, [weightKg, heightCm, age, gender]);
+  const estimatedBMR = useMemo(
+    () => calculateBMR({ weightKg, heightCm, age, gender }),
+    [weightKg, heightCm, age, gender]
+  );
 
   const handleCompleteSetup = () => {
     if (estimatedBMR === null) {
-      alert('Vui lòng điền đầy đủ và chính xác thông tin để tính BMR.');
+      toast.error("Please fill in all fields completely and accurately.");
       return;
     }
-    console.log('Dữ liệu đã thiết lập:', { fullName, gender, age, heightCm, weightKg, bmr: estimatedBMR });
-    alert(`Thiết lập hồ sơ hoàn tất! BMR ước tính: ${estimatedBMR} kcal/ngày.`);
+    // console.log("Dữ liệu đã thiết lập:", {
+    //   fullName,
+    //   gender,
+    //   age,
+    //   heightCm,
+    //   weightKg,
+    //   bmr: estimatedBMR,
+    // });
+    toast.success(
+      `Profile setup complete! Estimated BMR: ${estimatedBMR} kcal/day.`
+    );
+
+    redirect("/");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center">
-        {/* Header - Có thể thay bằng component HealthScore riêng */}
-        <header className="w-full max-w-lg bg-white shadow-sm p-4 border-b border-gray-200 z-10">
-            <h1 className="text-2xl font-bold text-gray-900">Profile Setup</h1>
-        </header>
+    <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-gray-50 via-violet-50/30 to-fuchsia-50/30">
+      {/* Decorative background elements */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="-top-40 -right-40 absolute h-80 w-80 rounded-full bg-violet-200/40 blur-3xl" />
+        <div className="-bottom-40 -left-40 absolute h-80 w-80 rounded-full bg-fuchsia-200/40 blur-3xl" />
+      </div>
 
-        {/* Nội dung Form Profile Setup */}
-        <main className="flex justify-center w-full p-4 sm:p-6 pb-24"> 
-            <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 sm:p-8">
-                
-                <div className="space-y-6">
-                    {/* FULL NAME */}
-                    <InputField
-                      label="FULL NAME"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Alex Chen"
-                      type="text"
-                    />
+      {/* Nội dung Form Profile Setup */}
+      <main className="relative z-10 flex w-full justify-center p-4 pb-24 sm:p-6">
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md rounded-2xl border border-white/50 bg-white/80 p-6 shadow-md backdrop-blur-lg sm:p-6"
+          initial={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <h1 className="mb-3 bg-linear-to-r from-violet-600 to-fuchsia-600 bg-clip-text font-bold text-3xl text-transparent">
+            Profile Setup
+          </h1>
+          <div className="space-y-5">
+            {/* FULL NAME */}
+            <InputField
+              delay={0.1}
+              icon={<User className="h-5 w-5" />}
+              label="FULL NAME"
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Enter your name"
+              type="text"
+              value={fullName}
+            />
 
-                    <div className="flex space-x-4">
-                      {/* GENDER */}
-                      <SelectField
-                        label="GENDER"
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value as 'Male' | 'Female')}
-                        options={['Male', 'Female']}
-                        className="w-1/2"
-                      />
-                      
-                      {/* AGE */}
-                      <InputField
-                        label="AGE"
-                        value={age === 0 ? '' : age}
-                        onChange={(e) => setAge(Number(e.target.value))}
-                        placeholder="25"
-                        type="number"
-                        min={1}
-                        className="w-1/2"
-                      />
-                    </div>
+            <div className="flex gap-4">
+              {/* GENDER */}
+              <SelectField
+                className="w-1/2"
+                delay={0.2}
+                icon={<Users className="h-5 w-5" />}
+                label="GENDER"
+                onChange={(e) => setGender(e.target.value as "Male" | "Female")}
+                options={["Male", "Female"]}
+                value={gender}
+              />
 
-                    <div className="flex space-x-4">
-                      {/* HEIGHT (CM) */}
-                      <InputField
-                        label="HEIGHT (CM)"
-                        value={heightCm === 0 ? '' : heightCm}
-                        onChange={(e) => setHeightCm(Number(e.target.value))}
-                        placeholder="175"
-                        type="number"
-                        min={1}
-                        className="w-1/2"
-                      />
-                      
-                      {/* WEIGHT (KG) */}
-                      <InputField
-                        label="WEIGHT (KG)"
-                        value={weightKg === 0 ? '' : weightKg}
-                        onChange={(e) => setWeightKg(Number(e.target.value))}
-                        placeholder="70"
-                        type="number"
-                        min={1}
-                        className="w-1/2"
-                      />
-                    </div>
-                </div>
-
-                {/* BMR ESTIMATION CARD */}
-                <BMRCard bmr={estimatedBMR} />
-
-                {/* COMPLETE SETUP BUTTON */}
-                <button
-                    onClick={handleCompleteSetup}
-                    disabled={estimatedBMR === null}
-                    className={`w-full py-4 mt-8 rounded-xl font-semibold transition-colors 
-                      ${estimatedBMR !== null
-                        ? 'bg-gray-900 text-white hover:bg-gray-700'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
-                >
-                    Complete Setup
-                </button>
+              {/* AGE */}
+              <InputField
+                className="w-1/2"
+                delay={0.25}
+                icon={<Calendar className="h-5 w-5" />}
+                label="AGE"
+                min={1}
+                onChange={(e) => setAge(Number(e.target.value))}
+                placeholder="25"
+                type="number"
+                value={age === 0 ? "" : age}
+              />
             </div>
-        </main>
-        
-        {/* Bottom Navbar (Footer) */}
-        <BottomNavbar />
+
+            <div className="flex gap-4">
+              {/* HEIGHT (CM) */}
+              <InputField
+                className="w-1/2"
+                delay={0.3}
+                icon={<Ruler className="h-5 w-5" />}
+                label="HEIGHT (CM)"
+                min={1}
+                onChange={(e) => setHeightCm(Number(e.target.value))}
+                placeholder="175"
+                type="number"
+                value={heightCm === 0 ? "" : heightCm}
+              />
+
+              {/* WEIGHT (KG) */}
+              <InputField
+                className="w-1/2"
+                delay={0.35}
+                icon={<Scale className="h-5 w-5" />}
+                label="WEIGHT (KG)"
+                min={1}
+                onChange={(e) => setWeightKg(Number(e.target.value))}
+                placeholder="70"
+                type="number"
+                value={weightKg === 0 ? "" : weightKg}
+              />
+            </div>
+          </div>
+
+          {/* BMR ESTIMATION CARD */}
+          <BMRCard bmr={estimatedBMR} />
+
+          {/* COMPLETE SETUP BUTTON */}
+          <motion.button
+            animate={{ opacity: 1, y: 0 }}
+            className={`mt-8 w-full rounded-xl py-3 font-semibold shadow-md transition-all duration-300 ${
+              estimatedBMR !== null
+                ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 hover:shadow-violet-500/25"
+                : "cursor-not-allowed bg-gray-200 text-gray-400"
+            }`}
+            disabled={estimatedBMR === null}
+            initial={{ opacity: 0, y: 20 }}
+            onClick={handleCompleteSetup}
+            transition={{ duration: 0.4, delay: 0.7 }}
+            whileHover={estimatedBMR !== null ? { scale: 1.02 } : {}}
+            whileTap={estimatedBMR !== null ? { scale: 0.98 } : {}}
+          >
+            Complete Setup
+            <ChevronRight className="ml-2 inline-block h-5 w-5" />
+          </motion.button>
+        </motion.div>
+      </main>
     </div>
   );
 }
