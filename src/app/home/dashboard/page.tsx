@@ -13,6 +13,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ShinyText from "@/components/shiny-text";
 
 type appleHealthProps = {
   open: boolean;
@@ -322,7 +323,7 @@ interface Props {
   logs: LogItem[];
 }
 
-function RecentLogs({ logs }: Props) {
+function _RecentLogs({ logs }: Props) {
   return (
     <div className="mt-6">
       <h2 className="mb-3 font-semibold text-lg">Recent Logs</h2>
@@ -399,20 +400,34 @@ export default function Page() {
 
   return (
     <main className="container mx-auto min-h-screen bg-gray-50 p-6">
-      {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-xl">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-violet-600" />
-            <p className="font-medium text-gray-600">Loading dashboard...</p>
-          </div>
-        </div>
-      )}
-      {/* <header className="mb-6 flex justify-between">
-        <h1 className="font-bold text-3xl">Dashboard</h1>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col items-center gap-4 rounded-2xl p-8">
+              <ShinyText
+                text="Thinking!"
+                disabled={false}
+                speed={3}
+                className="animate-shine text-3xl"
+              />
+              {/* <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-violet-600" />
+              <p className="font-medium text-gray-600">Loading dashboard...</p> */}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <header className="mb-6 flex justify-between">
+        <h1 className="font-bold text-2xl">Dashboard</h1>
+        {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
           <div className="h-6 w-6 rounded-full bg-purple-500" />
-        </div>
-      </header> */}
+        </div> */}
+      </header>
       <CircularGauge caloLeft={caloLeft} goal={goal} />
 
       <div className="mt-6 grid grid-cols-3 gap-3">
@@ -448,7 +463,7 @@ export default function Page() {
 
       <NutritionPanel netEnergy={netEnergy} />
       <CoachButton />
-      <RecentLogs
+      {/* <RecentLogs
         logs={[
           {
             title: "Healthy Salad",
@@ -463,7 +478,7 @@ export default function Page() {
             image: "/food_images/protein_shake_001.png",
           },
         ]}
-      />
+      /> */}
     </main>
   );
 }

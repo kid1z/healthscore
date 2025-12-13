@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Filter, History } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState, MealCardSkeleton } from "@/components/loading-states";
@@ -159,19 +159,13 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4">
       {/* Header */}
       <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="flex items-center gap-3 font-bold text-3xl">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500">
-              <History className="h-5 w-5 text-white" />
-            </div>
+          <h1 className="flex items-center gap-3 font-bold text-2xl">
             Meal History
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Browse and manage your analyzed meals
-          </p>
         </div>
 
         {/* Filters */}
