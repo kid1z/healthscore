@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
 import type React from "react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { upsertUserProfile } from "./actions";
 
 // =================================================================
 //                 LOGIC TÍNH TOÁN BMR (Không đổi)
@@ -210,30 +211,52 @@ export default function ProfileSetupPage() {
   const [age, setAge] = useState<number>(25);
   const [heightCm, setHeightCm] = useState<number>(175);
   const [weightKg, setWeightKg] = useState<number>(70);
+  const [isLoading, setIsLoading] = useState(false);
 
   const estimatedBMR = useMemo(
     () => calculateBMR({ weightKg, heightCm, age, gender }),
     [weightKg, heightCm, age, gender]
   );
 
-  const handleCompleteSetup = () => {
+  const handleCompleteSetup = async () => {
     if (estimatedBMR === null) {
       toast.error("Please fill in all fields completely and accurately.");
       return;
     }
-    // console.log("Dữ liệu đã thiết lập:", {
-    //   fullName,
-    //   gender,
-    //   age,
-    //   heightCm,
-    //   weightKg,
-    //   bmr: estimatedBMR,
-    // });
-    toast.success(
-      `Profile setup complete! Estimated BMR: ${estimatedBMR} kcal/day.`
-    );
 
-    redirect("/home");
+    if (!fullName.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await upsertUserProfile({
+        name: fullName.trim(),
+        gender,
+        age,
+        height: heightCm,
+        weight: weightKg,
+        bmr: estimatedBMR.toString(),
+      });
+
+      if (result.success) {
+        toast.success(
+          result.isNew
+            ? `Profile created! Estimated BMR: ${estimatedBMR} kcal/day.`
+            : `Profile updated! Estimated BMR: ${estimatedBMR} kcal/day.`
+        );
+        redirect("/home");
+      } else {
+        toast.error(result.error || "Failed to save profile.");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -329,19 +352,25 @@ export default function ProfileSetupPage() {
           <motion.button
             animate={{ opacity: 1, y: 0 }}
             className={`mt-8 w-full rounded-xl py-3 font-semibold shadow-md transition-all duration-300 ${
-              estimatedBMR !== null
+              estimatedBMR !== null && !isLoading
                 ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 hover:shadow-violet-500/25"
                 : "cursor-not-allowed bg-gray-200 text-gray-400"
             }`}
-            disabled={estimatedBMR === null}
+            disabled={estimatedBMR === null || isLoading}
             initial={{ opacity: 0, y: 20 }}
             onClick={handleCompleteSetup}
             transition={{ duration: 0.4, delay: 0.7 }}
-            whileHover={estimatedBMR !== null ? { scale: 1.02 } : {}}
-            whileTap={estimatedBMR !== null ? { scale: 0.98 } : {}}
+            whileHover={
+              estimatedBMR !== null && !isLoading ? { scale: 1.02 } : {}
+            }
+            whileTap={
+              estimatedBMR !== null && !isLoading ? { scale: 0.98 } : {}
+            }
           >
-            Complete Setup
-            <ChevronRight className="ml-2 inline-block h-5 w-5" />
+            {isLoading ? "Saving..." : "Complete Setup"}
+            {!isLoading && (
+              <ChevronRight className="ml-2 inline-block h-5 w-5" />
+            )}
           </motion.button>
         </motion.div>
       </main>

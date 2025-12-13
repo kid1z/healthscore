@@ -35,9 +35,8 @@ model Meal {
 model User {
   id        String   @id
   createdAt DateTime @default(now())
-  updatedAt DateTime
-  email     String   @unique
-  name      String?
+  updatedAt DateTime @updatedAt
+  name      String @unique
   device    String?
   age       Int?
   height    Int?
