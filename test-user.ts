@@ -8,9 +8,12 @@ async function main() {
     data: {
       id: crypto.randomUUID(),
       name: "Alice2",
-      email: "alice2@prisma.io",
       updatedAt: new Date(),
       bmr: "1500",
+      height: 170,
+      weight: 65,
+      age: 30,
+      gender: "Male",
     },
   });
   console.log("Created user:", user);
