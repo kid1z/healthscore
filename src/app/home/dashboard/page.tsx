@@ -27,8 +27,9 @@ const DEFAULT_BODY_ENERGY = 80;
 const STEPS_CALORIE_RATE = 0.05;
 const SITTING_CALORIE_RATE = 60;
 const SYNC_STEP_INCREMENT = 2109;
-const SYNC_SITTING_INCREMENT = 2;
+const SYNC_SITTING_INCREMENT = 8;
 const BODY_ENERGY_STEP_CHANGE = 10;
+const BODY_ENERGY_SITTING_CHANGE = 60;
 
 // ============ Types ============
 interface User {
@@ -390,7 +391,7 @@ export function StatCard({ label, value, color, onClick }: StatCardProps) {
 
 function NutritionPanel({ netEnergy }: NutritionPanelProps) {
   const isBurningFat = netEnergy <= 0;
-  const netEnergyProgress = Math.min((netEnergy / 300) * 100, 100);
+  const netEnergyProgress = Math.min(Math.round(Math.abs(netEnergy)/1000)*100,100);
 
   console.log("netEnergyProgress: ", netEnergyProgress);
 
@@ -517,7 +518,7 @@ export default function Page() {
         : state.sitting + SYNC_SITTING_INCREMENT;
       const newBodyEnergy = isStepSync
         ? state.bodyEnergy + BODY_ENERGY_STEP_CHANGE
-        : state.bodyEnergy - BODY_ENERGY_STEP_CHANGE;
+        : state.bodyEnergy - BODY_ENERGY_SITTING_CHANGE;
 
       const newBurned = isStepSync
         ? Math.round(state.burned + newSteps * STEPS_CALORIE_RATE)
