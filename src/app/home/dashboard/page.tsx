@@ -13,23 +13,29 @@
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import ShinyText from "@/components/shiny-text";
+import { USER_ID } from "@/app/constants";
+import Thinking from "@/components/thinking";
+import { Button } from "@/components/ui/button";
 
 type appleHealthProps = {
   open: boolean;
-  onClose: () => void;
   steps: number;
-  setSteps: React.Dispatch<React.SetStateAction<number>>;
   burned: number;
-  setBurned: React.Dispatch<React.SetStateAction<number>>;
   lastSyncSteps: number;
-  setLastSyncSteps: React.Dispatch<React.SetStateAction<number>>;
-  setCaloLeft: React.Dispatch<React.SetStateAction<number>>;
   inTake: number;
   goal: number;
-  netEnergy: number;
-  setNetEnergy: React.Dispatch<React.SetStateAction<number>>;
   bmr: number;
+  sitting: number;
+  netEnergy: number;
+  bodyEnergy: number;
+  onClose: () => void;
+  setSteps: React.Dispatch<React.SetStateAction<number>>;
+  setBurned: React.Dispatch<React.SetStateAction<number>>;
+  setLastSyncSteps: React.Dispatch<React.SetStateAction<number>>;
+  setCaloLeft: React.Dispatch<React.SetStateAction<number>>;
+  setNetEnergy: React.Dispatch<React.SetStateAction<number>>;
+  setSitting: React.Dispatch<React.SetStateAction<number>>;
+  setBodyEnergy: React.Dispatch<React.SetStateAction<number>>;
 };
 
 function AppleHealthSyncModal({
@@ -46,24 +52,30 @@ function AppleHealthSyncModal({
   goal,
   setNetEnergy,
   bmr,
+  sitting,
+  setSitting,
+  bodyEnergy,
+  setBodyEnergy,
 }: appleHealthProps) {
   const [showCongrats, setShowCongrats] = useState(false);
 
-  const handleSync = () => {
-    const MAX_STEP = 3000;
-    const MIN_STEP = 700;
-    const randomSteps =
-      Math.floor(Math.random() * (MAX_STEP - MIN_STEP + 1)) + MIN_STEP;
-
-    const stepVal = steps + randomSteps;
-
+  const handleSync = async () => {
+    const stepVal = steps + 2109;
+    const sittingVal = sitting + 2; //hours
     setSteps(stepVal);
-    const burnedVal = Math.round(burned + randomSteps * 0.05);
+    setSitting(sittingVal);
+
+    //each step cost 0.05, each sitting hour cost 60
+    const burnedVal = Math.round(burned + sittingVal * 60 + sittingVal * 0.05);
     setBurned(burnedVal);
 
     //Calo left = Goal(2000) + Burned(step) - Intake(food calo)
-    setCaloLeft(() => goal + burnedVal - inTake);
-    setLastSyncSteps(randomSteps);
+    setCaloLeft(() => Math.round(goal + burnedVal - inTake));
+    setLastSyncSteps(stepVal);
+    if (stepVal) {
+      const bodyEnVal = Math.min(bodyEnergy + 10, 100);
+      setBodyEnergy(bodyEnVal);
+    }
 
     //Net Energy = Intake(food calo) - (BRM bio profile + Burned (step))
     console.log({
@@ -72,6 +84,26 @@ function AppleHealthSyncModal({
       burned: burnedVal,
     });
     setNetEnergy(() => inTake - (bmr + burnedVal));
+
+    // update step and sitting
+    const data = await fetch("/api/sync", {
+      method: "POST",
+      body: JSON.stringify({
+        id: USER_ID,
+        step: stepVal,
+        sitting: sittingVal,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("=========sync response ", data);
+
+    if (!data.ok) {
+      console.error("Failed to sync data with server");
+      return;
+    }
 
     setShowCongrats(false); // reset animation
     setTimeout(() => setShowCongrats(true), 50);
@@ -126,8 +158,10 @@ function AppleHealthSyncModal({
               }}
             >
               🎉 Great job! You walked{" "}
-              <span className="font-bold text-green">{lastSyncSteps}</span> more
-              steps today!
+              <span className="font-bold">{lastSyncSteps}</span> steps today!
+              <br />
+              ⚠️ You’ve been sitting for{" "}
+              <span className="font-bold">{sitting}</span> hours today
             </motion.p>
           )}
         </AnimatePresence>
@@ -135,7 +169,7 @@ function AppleHealthSyncModal({
         {/* Actions */}
         <button
           className="mt-6 w-full rounded-xl bg-gray-900 py-3 font-medium text-white"
-          onClick={handleSync}
+          onClick={async () => await handleSync()}
         >
           Sync Data
         </button>
@@ -169,6 +203,12 @@ type UserTodayResponse = {
     imageUrl?: string;
   }>;
   totalIntake: number;
+  exercise: {
+    id: string;
+    date: string;
+    step: number;
+    sitting: number;
+  } | null;
 };
 
 async function getUserAndTodayMeals(
@@ -184,6 +224,62 @@ async function getUserAndTodayMeals(
     console.error("Error fetching user and meals:", error);
     return null;
   }
+}
+
+type bodyEnergyProp = {
+  bodyEnergy: number;
+};
+
+function BodyEnergyGauge({ bodyEnergy }: bodyEnergyProp) {
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+
+  const progress = Math.min(bodyEnergy / 100, 1); // max 100%
+  const offset = circumference * (1 - progress);
+
+  const strokeColor = bodyEnergy < 30 ? "rgba(183, 233, 4, 1)" : "#05D60E"; // green / red
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative h-48 w-48">
+        <svg viewBox="0 0 100 100">
+          <title>Calories Left Gauge</title>
+
+          {/* Background */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth="7"
+          />
+
+          {/* Progress */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            transform="rotate(-320 50 50)"
+            className="transition-all duration-500 ease-out"
+          />
+        </svg>
+
+        {/* Center content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="text:bold text-gray-500 text-sm">
+            B.Energy: {bodyEnergy}%
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 type circularGauProp = {
@@ -213,7 +309,7 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
             r={radius}
             fill="none"
             stroke="#e5e7eb"
-            strokeWidth="10"
+            strokeWidth="7"
           />
 
           {/* Progress */}
@@ -223,7 +319,7 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
             r={radius}
             fill="none"
             stroke={strokeColor}
-            strokeWidth="10"
+            strokeWidth="7"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
@@ -235,7 +331,7 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="font-bold text-4xl">{caloLeft}</div>
-          <div className="text-gray-500 text-sm">Kcal Left</div>
+          <div className="text-gray-500 text-sm">Kcal left</div>
           <div className="text-gray-500 text-sm">Goal: {goal}</div>
         </div>
       </div>
@@ -306,67 +402,16 @@ function NutritionPanel({ netEnergy }: NutritionPanelProps) {
 
 function CoachButton() {
   return (
-    <button className="mt-3 w-full rounded-2xl border bg-gray-100 p-4 text-center font-semibold text-gray-700 hover:bg-gray-200">
-      <Link href="/smart_coach">Open Smart Coach</Link>
-    </button>
-  );
-}
-
-interface LogItem {
-  title: string;
-  time: string;
-  calories: number; // số âm (đốt) hoặc dương (nạp)
-  image?: string;
-}
-
-interface Props {
-  logs: LogItem[];
-}
-
-function _RecentLogs({ logs }: Props) {
-  return (
-    <div className="mt-6">
-      <h2 className="mb-3 font-semibold text-lg">Recent Logs</h2>
-
-      <div className="flex flex-col gap-3">
-        {logs.map((log, idx) => (
-          <div
-            className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
-            key={idx}
-          >
-            {/* Left section */}
-            <div className="flex items-center gap-3">
-              <img
-                alt={log.title}
-                className="h-12 w-12 rounded-full object-cover"
-                src={log.image ?? "/public/vercel.svg"}
-              />
-
-              <div>
-                <div className="font-semibold">{log.title}</div>
-                <div className="text-gray-500 text-sm">{log.time}</div>
-              </div>
-            </div>
-
-            {/* Right calories */}
-            <div
-              className={`font-bold text-lg ${
-                log.calories < 0 ? "text-red-500" : "text-green-600"
-              }`}
-            >
-              {log.calories}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Button className="mt-3 w-full rounded-2xl border bg-fuchsia-500/10 p-6 text-center font-semibold text-fuchsia-600 text-xl hover:bg-fuchsia-500/40">
+      <Link href="/home/smart_coach">Open Smart Coach</Link>
+    </Button>
   );
 }
 
 export default function Page() {
   const [openAppleHealth, setOpenAppleHealth] = useState(false);
-  const [steps, setSteps] = useState(13_000);
-  const [burned, setBurned] = useState(steps * 0.05);
+  const [steps, setSteps] = useState(0);
+  const [burned, setBurned] = useState(0);
   const [lastSyncSteps, setLastSyncSteps] = useState(0);
   const [user, setUser] = useState<UserTodayResponse["user"] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -376,59 +421,96 @@ export default function Page() {
   const [caloLeft, setCaloLeft] = useState(goal + burned - inTake);
   const [bmr] = useState(300);
   const [netEnergy, setNetEnergy] = useState(inTake - (bmr + burned));
+  const [bodyEnergy, setBodyEnergy] = useState(80);
+  const [sitting, setSitting] = useState(0);
+  const [bodyEnergyImgUrl, setBodyEnergyImgUrl] = useState("");
 
   useEffect(() => {
-    const userId = "b2e41dd8-74aa-4aec-a503-111d2f49461f";
+    const userId = USER_ID;
 
-    async function fetchData() {
-      setLoading(true);
-      const data = await getUserAndTodayMeals(userId);
-      console.log("Fetched user today data:", data);
-      if (data) {
-        setUser(data.user);
-        // setTodayMeals(data.meals);
-        // setBmr(data.user.bmr);
-        setInTake(data.totalIntake);
-        setCaloLeft(goal + burned - data.totalIntake);
-        setNetEnergy(data.totalIntake - (bmr + burned));
+    console.log("===== vao day =====");
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const data = await getUserAndTodayMeals(userId);
+        console.log("Fetched user today data:", data);
+
+        if (!data) {
+          return;
+        }
+
+        // biome-ignore lint/nursery/noShadow: <na>
+        const { user, meals = [], totalIntake, exercise } = data;
+
+        const foodEnergyPercentage = meals.reduce((acc, { calories }) => {
+          if (calories >= 500) {
+            return acc - 10;
+          }
+          if (calories >= 300) {
+            return acc - 5;
+          }
+          return acc + 2;
+        }, 80);
+
+        setBodyEnergy(foodEnergyPercentage + Math.round(steps / 2000) * 10);
+        setUser(user);
+        setInTake(totalIntake);
+        setCaloLeft(goal + burned - totalIntake);
+        setNetEnergy(totalIntake - (bmr + burned));
+        setSteps(exercise ? exercise.step : 0);
+        setSitting(exercise ? exercise.sitting : 0);
+
+        setBurned(() => {
+          const burnedFromSitting = (exercise ? exercise.sitting : 0) * 60;
+          const burnedFromSteps = (exercise ? exercise.step : 0) * 0.05;
+
+          return Math.round(burnedFromSitting + burnedFromSteps);
+        });
+      } catch (error) {
+        console.error("Failed to fetch user meals:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }
+    };
 
     fetchData();
-  }, [goal, burned, bmr]);
+  }, [goal, burned, bmr, steps]);
+
+  useEffect(() => {
+    let bodyEnergyImgUrlVal = "";
+    if (bodyEnergy >= 30 && bodyEnergy <= 70) {
+      bodyEnergyImgUrlVal = "70v1.gif";
+    } else if (bodyEnergy > 70) {
+      bodyEnergyImgUrlVal = "90v1.gif";
+    } else {
+      bodyEnergyImgUrlVal = "30v1.gif";
+    }
+
+    setBodyEnergyImgUrl(bodyEnergyImgUrlVal);
+  }, [bodyEnergy]);
+
+  console.log("===steps ", steps);
+  console.log("===burned ", burned);
 
   return (
-    <main className="container mx-auto min-h-screen bg-gray-50 p-6">
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex flex-col items-center gap-4 rounded-2xl p-8">
-              <ShinyText
-                text="Thinking!"
-                disabled={false}
-                speed={3}
-                className="animate-shine text-3xl"
-              />
-              {/* <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-violet-600" />
-              <p className="font-medium text-gray-600">Loading dashboard...</p> */}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <main className="container mx-auto p-6">
+      <Thinking loading={loading} />
       <header className="mb-6 flex justify-between">
         <h1 className="font-bold text-2xl">Dashboard</h1>
         {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
           <div className="h-6 w-6 rounded-full bg-purple-500" />
         </div> */}
       </header>
-      <CircularGauge caloLeft={caloLeft} goal={goal} />
+
+      <div className="flex justify-center">
+        <img alt="no_image" src={`/uploads/${bodyEnergyImgUrl}`} />
+      </div>
+      <div className="flex flex-row justify-evenly">
+        <CircularGauge caloLeft={caloLeft} goal={goal} />
+        <BodyEnergyGauge bodyEnergy={bodyEnergy} />
+      </div>
 
       <div className="mt-6 grid grid-cols-3 gap-3">
         <StatCard color="text-blue-500" label="Intake" value={inTake} />
@@ -437,7 +519,7 @@ export default function Page() {
 
         <StatCard
           color="text-blue-500"
-          label="STEPS"
+          label="Activity (Sync)"
           onClick={() => setOpenAppleHealth(true)}
           value={steps}
         />
@@ -458,6 +540,10 @@ export default function Page() {
           netEnergy={netEnergy}
           setNetEnergy={setNetEnergy}
           bmr={user ? user.bmr : 0}
+          sitting={sitting}
+          setSitting={setSitting}
+          bodyEnergy={bodyEnergy}
+          setBodyEnergy={setBodyEnergy}
         />
       </div>
 

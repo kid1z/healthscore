@@ -28,6 +28,15 @@ export async function GET(
           },
           orderBy: { createdAt: "desc" },
         },
+        exercises: {
+          where: {
+            date: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+          orderBy: { date: "desc" },
+        },
       },
     });
 
@@ -68,6 +77,7 @@ export async function GET(
       },
       meals: formattedMeals,
       totalIntake,
+      exercise: user.exercises[0],
     });
   } catch (error) {
     console.error("Error fetching user and meals:", error);

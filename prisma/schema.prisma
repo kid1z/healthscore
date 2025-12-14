@@ -44,13 +44,18 @@ model User {
   gender     String?
   bmr        String      @default("")
   Meal       Meal[]
-  excercises Excercise[]
+  exercises  Exercise[]
 }
 
-model Excercise {
+model Exercise {
   id      String @id
-  Step    Int?
-  Sitting Int?
-  userId  String
-  User    User   @relation(fields: [userId], references: [id])
+  step    Int @default(0)
+  sitting Int @default(0)
+  burned  Int @default(0)
+  date    DateTime
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
 }

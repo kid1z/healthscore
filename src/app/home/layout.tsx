@@ -23,7 +23,7 @@ export default function HomeLayout({
             </span>
           </p>
           <p className="text-muted-foreground text-sm">
-            © 2025 HealthScore. All rights reserved.
+            © 2025 CyberHealth. All rights reserved.
           </p>
         </div>
       </footer>
