@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/nursery/noLeakedRender: <na> */
+/** biome-ignore-all lint/correctness/noUnusedVariables: <ba> */
 /** biome-ignore-all lint/correctness/noUnusedFunctionParameters: <na> */
 /** biome-ignore-all lint/suspicious/noDoubleEquals: <na> */
 /** biome-ignore-all lint/style/useTemplate: <na> */
@@ -15,176 +16,196 @@
 "use client";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
-import { type SetStateAction, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { USER_ID } from "@/app/constants";
 import Thinking from "@/components/thinking";
 import { Button } from "@/components/ui/button";
 
-type appleHealthProps = {
-  open: boolean;
+// ============ Constants ============
+const DEFAULT_GOAL = 2000;
+const DEFAULT_BODY_ENERGY = 80;
+const STEPS_CALORIE_RATE = 0.05;
+const SITTING_CALORIE_RATE = 60;
+const SYNC_STEP_INCREMENT = 2109;
+const SYNC_SITTING_INCREMENT = 2;
+const BODY_ENERGY_STEP_CHANGE = 10;
+
+// ============ Types ============
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  bmr: number;
+  weight: number;
+  height: number;
+  age: number;
+}
+
+interface Meal {
+  id: string;
+  title: string;
+  calories: number;
+  createdAt: string;
+  imageUrl?: string;
+}
+
+interface Exercise {
+  id: string;
+  date: string;
+  step: number;
+  sitting: number;
+}
+
+interface UserTodayResponse {
+  user: User;
+  meals: Meal[];
+  totalIntake: number;
+  exercise: Exercise | null;
+}
+
+interface DashboardState {
   steps: number;
   burned: number;
-  lastSyncSteps: number;
-  inTake: number;
-  goal: number;
-  bmr: number;
   sitting: number;
+  inTake: number;
+  caloLeft: number;
   netEnergy: number;
   bodyEnergy: number;
+  bmr: number;
+}
+
+interface AppleHealthSyncModalProps {
+  open: boolean;
+  state: DashboardState;
+  goal: number;
   selectedSyncType: string;
   onClose: () => void;
-  setSteps: React.Dispatch<React.SetStateAction<number>>;
-  setBurned: React.Dispatch<React.SetStateAction<number>>;
-  setLastSyncSteps: React.Dispatch<React.SetStateAction<number>>;
-  setCaloLeft: React.Dispatch<React.SetStateAction<number>>;
-  setNetEnergy: React.Dispatch<React.SetStateAction<number>>;
-  setSitting: React.Dispatch<React.SetStateAction<number>>;
-  setBodyEnergy: React.Dispatch<React.SetStateAction<number>>;
-  setSelectedSyncType: React.Dispatch<React.SetStateAction<string>>;
+  onSync: (type: string) => Promise<void>;
+  onTypeChange: (type: string) => void;
+}
+
+interface CircularGaugeProps {
+  goal: number;
+  caloLeft: number;
+}
+
+interface BodyEnergyGaugeProps {
+  bodyEnergy: number;
+}
+
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  color?: string;
+  onClick?: () => void;
+}
+
+interface NutritionPanelProps {
+  netEnergy: number;
+}
+
+// ============ Utility Functions ============
+const calculateBurned = (steps: number, sitting: number): number =>
+  Math.round(sitting * SITTING_CALORIE_RATE + steps * STEPS_CALORIE_RATE);
+
+const calculateCaloLeft = (
+  goal: number,
+  burned: number,
+  inTake: number
+): number => Math.round(goal + burned - inTake);
+
+const calculateNetEnergy = (
+  inTake: number,
+  bmr: number,
+  burned: number
+): number => inTake - (bmr + burned);
+
+const calculateBodyEnergy = (
+  meals: Meal[],
+  steps: number,
+  sitting: number
+): number => {
+  const foodEnergyPercentage = meals.reduce((acc, { calories }) => {
+    if (calories >= 500) {
+      return acc - 10;
+    }
+    if (calories >= 300) {
+      return acc - 5;
+    }
+    return acc + 2;
+  }, DEFAULT_BODY_ENERGY);
+
+  return (
+    foodEnergyPercentage +
+    Math.round(steps / 2000) * 10 -
+    Math.round((sitting / 2) * 10)
+  );
 };
 
+const getBodyEnergyImageUrl = (bodyEnergy: number): string => {
+  if (bodyEnergy > 70) {
+    return "90v1.gif";
+  }
+  if (bodyEnergy >= 30) {
+    return "70v1.gif";
+  }
+  return "30v1.gif";
+};
+
+// ============ API Functions ============
+export async function getUserAndTodayMeals(
+  userId: string
+): Promise<UserTodayResponse | null> {
+  try {
+    const response = await fetch(`/api/users/${userId}/today`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching user and meals:", error);
+    return null;
+  }
+}
+
+async function syncHealthData(
+  userId: string,
+  step: number,
+  sitting: number
+): Promise<boolean> {
+  try {
+    const response = await fetch("/api/sync", {
+      method: "POST",
+      body: JSON.stringify({ id: userId, step, sitting }),
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.ok;
+  } catch (error) {
+    console.error("Failed to sync data:", error);
+    return false;
+  }
+}
+
+// ============ Components ============
 function AppleHealthSyncModal({
   open,
-  onClose,
-  steps,
-  setSteps,
-  burned,
-  setBurned,
-  lastSyncSteps,
-  setLastSyncSteps,
-  setCaloLeft,
-  inTake,
+  state,
   goal,
-  setNetEnergy,
-  bmr,
-  sitting,
-  setSitting,
-  bodyEnergy,
-  setBodyEnergy,
   selectedSyncType,
-  setSelectedSyncType,
-}: appleHealthProps) {
+  onClose,
+  onSync,
+  onTypeChange,
+}: AppleHealthSyncModalProps) {
   const [showCongrats, setShowCongrats] = useState(false);
 
-  const handleTypeChange = async (typeVal: SetStateAction<string>) => {
-    setSelectedSyncType(typeVal);
-  };
-
   const handleSync = async () => {
-    let lastSyncStepVal = 0;
-    let lastSyncSittingVal = 0;
-    if (selectedSyncType + "" == "step") {
-      lastSyncStepVal = steps + 2109;
-      lastSyncSittingVal = sitting; //
-      setSteps(lastSyncStepVal);
-      const burnedValByStep = Math.round(burned + lastSyncStepVal * 0.05);
-      setBurned(burnedValByStep);
-
-      setBodyEnergy(bodyEnergy + 10); //
-    } else {
-      lastSyncSittingVal = sitting + 2; //hour
-      lastSyncStepVal = steps;
-      setSitting(lastSyncSittingVal); //Step no change
-      const burnedValBySitting = Math.round(burned + lastSyncSittingVal * 60);
-
-      setBurned(burnedValBySitting);
-
-      setBodyEnergy(bodyEnergy - 10); //Sit 2 hour =  -10% body energy
-    }
-
-    //Calo left = Goal+Burned-intake
-    setCaloLeft(() => Math.round(goal + burned - inTake));
-
-    //Net Energy = Intake(food calo) - (BRM bio profile + Burned (step))
-    setNetEnergy(() => inTake - (bmr + burned));
-
-    console.log(
-      JSON.stringify({
-        id: USER_ID,
-        step: lastSyncStepVal,
-        sitting: lastSyncSittingVal,
-      })
-    );
-
-    // update step and sitting
-    const data = await fetch("/api/sync", {
-      method: "POST",
-      body: JSON.stringify({
-        id: USER_ID,
-        step: lastSyncStepVal,
-        sitting: lastSyncSittingVal,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    // console.log("=========sync response ", data);
-
-    if (!data.ok) {
-      console.error("Failed to sync data with server");
-      return;
-    }
-
-    setShowCongrats(false); // reset animation
+    await onSync(selectedSyncType);
+    setShowCongrats(false);
     setTimeout(() => setShowCongrats(true), 50);
-    setTimeout(() => handleCancel(), 2000);
-  };
-
-  // const handleSync = async () => {
-  //   const stepVal = steps + 2109;
-  //   const sittingVal = sitting + 2; //hours
-  //   setSteps(stepVal);
-  //   setSitting(sittingVal);
-
-  //   //each step cost 0.05, each sitting hour cost 60
-  //   const burnedVal = Math.round(burned + sittingVal * 60 + sittingVal * 0.05);
-  //   setBurned(burnedVal);
-
-  //   //Calo left = Goal(2000) + Burned(step) - Intake(food calo)
-  //   setCaloLeft(() => Math.round(goal + burnedVal - inTake));
-  //   setLastSyncSteps(stepVal);
-  //   if (stepVal) {
-  //     const bodyEnVal = Math.min(bodyEnergy + 10, 100);
-  //     setBodyEnergy(bodyEnVal);
-  //   }
-
-  //   //Net Energy = Intake(food calo) - (BRM bio profile + Burned (step))
-  //   console.log({
-  //     inTake,
-  //     bmr,
-  //     burned: burnedVal,
-  //   });
-  //   setNetEnergy(() => inTake - (bmr + burnedVal));
-
-  //   // update step and sitting
-  //   const data = await fetch("/api/sync", {
-  //     method: "POST",
-  //     body: JSON.stringify({
-  //       id: USER_ID,
-  //       step: stepVal,
-  //       sitting: sittingVal,
-  //     }),
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   });
-
-  //   console.log("=========sync response ", data);
-
-  //   if (!data.ok) {
-  //     console.error("Failed to sync data with server");
-  //     return;
-  //   }
-
-  //   setShowCongrats(false); // reset animation
-  //   setTimeout(() => setShowCongrats(true), 50);
-  //   setTimeout(() => handleCancel(), 2000);
-  // };
-
-  const handleCancel = () => {
-    setShowCongrats(false); // reset animation
-    onClose(); // close đóng modal
+    setTimeout(() => {
+      setShowCongrats(false);
+      onClose();
+    }, 2000);
   };
 
   if (!open) {
@@ -193,20 +214,16 @@ function AppleHealthSyncModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative z-10 w-full max-w-md rounded-t-3xl bg-white p-6 sm:rounded-2xl">
-        {/* Icon */}
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
           <span className="text-xl">⌚</span>
         </div>
 
-        {/* Title */}
         <h2 className="text-center font-semibold text-lg">Apple Health Sync</h2>
         <p className="mb-6 text-center text-gray-500 text-sm">
           Select your data to sync
@@ -215,18 +232,13 @@ function AppleHealthSyncModal({
         <select
           name="selectedTypeSync"
           value={selectedSyncType}
-          onChange={(e) => handleTypeChange(e.target.value)}
+          onChange={(e) => onTypeChange(e.target.value)}
           className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option className="text-bold" value="step">
-            Step
-          </option>
-          <option className="text-bold" value="sitting">
-            Sitting
-          </option>
+          <option value="step">Step</option>
+          <option value="sitting">Sitting</option>
         </select>
 
-        {/* Step */}
         <AnimatePresence>
           {showCongrats && (
             <motion.p
@@ -243,35 +255,29 @@ function AppleHealthSyncModal({
                 damping: 15,
               }}
             >
-              {selectedSyncType === "step" && (
+              {selectedSyncType === "step" ? (
                 <>
                   🎉 Great job! You walked{" "}
-                  <span className="font-bold">{steps}</span> steps today!
+                  <span className="font-bold">{state.steps}</span> steps today!
                 </>
-              )}
-              <br />
-              {selectedSyncType === "sitting" && (
+              ) : (
                 <>
                   ⚠️ You've been sitting for{" "}
-                  <span className="font-bold">{sitting}</span> hours today
+                  <span className="font-bold">{state.sitting}</span> hours today
                 </>
               )}
             </motion.p>
           )}
         </AnimatePresence>
 
-        {/* Actions */}
         <button
           className="mt-6 w-full rounded-xl bg-gray-900 py-3 font-medium text-white"
-          onClick={async () => await handleSync()}
+          onClick={handleSync}
         >
           Sync Data
         </button>
 
-        <button
-          className="mt-3 w-full text-gray-500 text-sm"
-          onClick={handleCancel}
-        >
+        <button className="mt-3 w-full text-gray-500 text-sm" onClick={onClose}>
           Cancel
         </button>
       </div>
@@ -279,124 +285,18 @@ function AppleHealthSyncModal({
   );
 }
 
-type UserTodayResponse = {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    bmr: number;
-    weight: number;
-    height: number;
-    age: number;
-  };
-  meals: Array<{
-    id: string;
-    title: string;
-    calories: number;
-    createdAt: string;
-    imageUrl?: string;
-  }>;
-  totalIntake: number;
-  exercise: {
-    id: string;
-    date: string;
-    step: number;
-    sitting: number;
-  } | null;
-};
-
-export async function getUserAndTodayMeals(
-  userId: string
-): Promise<UserTodayResponse | null> {
-  try {
-    const response = await fetch(`/api/users/${userId}/today`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch user data");
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching user and meals:", error);
-    return null;
-  }
-}
-
-type bodyEnergyProp = {
-  bodyEnergy: number;
-};
-
-function BodyEnergyGauge({ bodyEnergy }: bodyEnergyProp) {
+function CircularGauge({ goal, caloLeft }: CircularGaugeProps) {
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
-
-  const progress = Math.min(bodyEnergy / 100, 1); // max 100%
+  const progress = Math.min(caloLeft / goal, 1);
   const offset = circumference * (1 - progress);
-
-  const strokeColor = bodyEnergy < 30 ? "rgba(183, 233, 4, 1)" : "#05D60E"; // green / red
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative h-42 w-42 md:h-48 md:w-48">
-        <svg viewBox="0 0 100 100">
-          <title>B.Energy</title>
-
-          {/* Background */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth="7"
-          />
-
-          {/* Progress */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke={strokeColor}
-            strokeWidth="7"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            transform="rotate(-320 50 50)"
-            className="transition-all duration-500 ease-out"
-          />
-        </svg>
-
-        {/* Center content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="text:bold text-gray-500 text-sm">
-            B.Energy: {bodyEnergy}%
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type circularGauProp = {
-  goal: number;
-  caloLeft: number;
-};
-function CircularGauge({ goal, caloLeft }: circularGauProp) {
-  // const [isEditing, setIsEditing] = useState(false);
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-
-  const progress = Math.min(caloLeft / goal, 1); // max 100%
-  const offset = circumference * (1 - progress);
-
-  const strokeColor = caloLeft > 300 ? "#22c55e" : "#ef4444"; // green / red
+  const strokeColor = caloLeft > 300 ? "#22c55e" : "#ef4444";
 
   return (
     <div className="flex flex-col items-center">
       <div className="relative h-42 w-42 md:h-48 md:w-48">
         <svg viewBox="0 0 100 100">
           <title>Calories Left Gauge</title>
-
-          {/* Background */}
           <circle
             cx="50"
             cy="50"
@@ -405,8 +305,6 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
             stroke="#e5e7eb"
             strokeWidth="7"
           />
-
-          {/* Progress */}
           <circle
             cx="50"
             cy="50"
@@ -421,8 +319,6 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
             className="transition-all duration-500 ease-out"
           />
         </svg>
-
-        {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="font-bold text-3xl md:text-4xl">{caloLeft}</div>
           <div className="text-gray-500 text-sm">Kcal left</div>
@@ -433,18 +329,56 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
   );
 }
 
-interface statCardProps {
-  label: string;
-  value: string | number;
-  color?: string;
-  onClick?: () => void;
+function BodyEnergyGauge({ bodyEnergy }: BodyEnergyGaugeProps) {
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.min(bodyEnergy / 100, 1);
+  const offset = circumference * (1 - progress);
+  const strokeColor = bodyEnergy < 30 ? "rgba(183, 233, 4, 1)" : "#05D60E";
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative h-42 w-42 md:h-48 md:w-48">
+        <svg viewBox="0 0 100 100">
+          <title>B.Energy</title>
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth="7"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            transform="rotate(-320 50 50)"
+            className="transition-all duration-500 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="text:bold text-gray-500 text-sm">
+            B.Energy: {bodyEnergy}%
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export function StatCard({ label, value, color, onClick }: statCardProps) {
+export function StatCard({ label, value, color, onClick }: StatCardProps) {
   return (
     <button
-      className={`rounded-xl bg-white p-4 text-center shadow-sm transition ${onClick ? "cursor-pointer hover:shadow-md active:scale-[0.98]" : ""}
-      `}
+      className={`rounded-xl bg-white p-4 text-center shadow-sm transition ${
+        onClick ? "cursor-pointer hover:shadow-md active:scale-[0.98]" : ""
+      }`}
       disabled={!onClick}
       onClick={onClick}
     >
@@ -454,13 +388,11 @@ export function StatCard({ label, value, color, onClick }: statCardProps) {
   );
 }
 
-type NutritionPanelProps = {
-  netEnergy: number;
-};
-
 function NutritionPanel({ netEnergy }: NutritionPanelProps) {
   const isBurningFat = netEnergy <= 0;
   const netEnergyProgress = Math.min((netEnergy / 300) * 100, 100);
+
+  console.log("netEnergyProgress: ", netEnergyProgress);
 
   return (
     <div className="my-6 rounded-2xl bg-white p-5 shadow-sm">
@@ -504,72 +436,51 @@ function CoachButton() {
   );
 }
 
-export default function Page() {
-  const [openAppleHealth, setOpenAppleHealth] = useState(false);
-  const [steps, setSteps] = useState(0);
-  const [burned, setBurned] = useState(0);
-  const [lastSyncSteps, setLastSyncSteps] = useState(0);
-  const [user, setUser] = useState<UserTodayResponse["user"] | null>(null);
+// ============ Custom Hook ============
+function useDashboardData() {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<DashboardState>({
+    steps: 0,
+    burned: 0,
+    sitting: 0,
+    inTake: 1000,
+    caloLeft: DEFAULT_GOAL,
+    netEnergy: 0,
+    bodyEnergy: DEFAULT_BODY_ENERGY,
+    bmr: 300,
+  });
 
-  const [goal, _] = useState(2000);
-  const [inTake, setInTake] = useState(1000);
-  const [caloLeft, setCaloLeft] = useState(goal + burned - inTake);
-  const [bmr, setBmr] = useState(300);
-  const [netEnergy, setNetEnergy] = useState(inTake - (bmr + burned));
-  const [bodyEnergy, setBodyEnergy] = useState(80);
-  const [sitting, setSitting] = useState(0);
-  const [bodyEnergyImgUrl, setBodyEnergyImgUrl] = useState("");
-  const [selectedSyncType, setSelectedSyncType] = useState("step");
+  const updateState = useCallback((updates: Partial<DashboardState>) => {
+    setState((prev) => ({ ...prev, ...updates }));
+  }, []);
 
   useEffect(() => {
-    const userId = USER_ID;
-
-    // console.log("===== vao day =====");
-
     const fetchData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-
-        const data = await getUserAndTodayMeals(userId);
-        console.log("Fetched user today data:", data);
-
+        const data = await getUserAndTodayMeals(USER_ID);
         if (!data) {
           return;
         }
 
-        // biome-ignore lint/nursery/noShadow: <na>
-        const { user, meals = [], totalIntake, exercise } = data;
+        const { user: userData, meals = [], totalIntake, exercise } = data;
+        const steps = exercise?.step ?? 0;
+        const sitting = exercise?.sitting ?? 0;
+        const bmr = Number(userData.bmr);
+        const burned = calculateBurned(steps, sitting);
+        const bodyEnergy = calculateBodyEnergy(meals, steps, sitting);
 
-        const foodEnergyPercentage = meals.reduce((acc, { calories }) => {
-          if (calories >= 500) {
-            return acc - 10;
-          }
-          if (calories >= 300) {
-            return acc - 5;
-          }
-          return acc + 2;
-        }, 80);
-
-        setBodyEnergy(
-          foodEnergyPercentage +
-            Math.round(steps / 2000) * 10 -
-            Math.round((sitting / 2) * 10)
-        );
-        setUser(user);
-        setInTake(totalIntake);
-        setCaloLeft(goal + burned - totalIntake);
-        setNetEnergy(totalIntake - (bmr + burned));
-        setSteps(exercise ? exercise.step : 0);
-        setSitting(exercise ? exercise.sitting : 0);
-
-        setBmr(Number(user.bmr));
-
-        setBurned(() => {
-          const burnedFromSitting = (exercise ? exercise.sitting : 0) * 60;
-          const burnedFromSteps = (exercise ? exercise.step : 0) * 0.05;
-
-          return Math.round(burnedFromSitting + burnedFromSteps);
+        setUser(userData);
+        updateState({
+          steps,
+          sitting,
+          bmr,
+          burned,
+          bodyEnergy,
+          inTake: totalIntake,
+          caloLeft: calculateCaloLeft(DEFAULT_GOAL, burned, totalIntake),
+          netEnergy: calculateNetEnergy(totalIntake, bmr, burned),
         });
       } catch (error) {
         console.error("Failed to fetch user meals:", error);
@@ -579,97 +490,99 @@ export default function Page() {
     };
 
     fetchData();
-  }, [goal, burned, bmr, steps, sitting]);
+  }, [updateState]);
 
-  useEffect(() => {
-    let bodyEnergyImgUrlVal = "";
-    if (bodyEnergy >= 30 && bodyEnergy <= 70) {
-      bodyEnergyImgUrlVal = "70v1.gif";
-    } else if (bodyEnergy > 70) {
-      bodyEnergyImgUrlVal = "90v1.gif";
-    } else {
-      bodyEnergyImgUrlVal = "30v1.gif";
-    }
+  return { user, loading, state, updateState };
+}
 
-    setBodyEnergyImgUrl(bodyEnergyImgUrlVal);
-  }, [bodyEnergy]);
+// ============ Main Component ============
+export default function Page() {
+  const { user, loading, state, updateState } = useDashboardData();
+  const [openAppleHealth, setOpenAppleHealth] = useState(false);
+  const [selectedSyncType, setSelectedSyncType] = useState("step");
 
-  // console.log("===steps ", steps);
-  // console.log("===burned ", burned);
+  const bodyEnergyImgUrl = useMemo(
+    () => getBodyEnergyImageUrl(state.bodyEnergy),
+    [state.bodyEnergy]
+  );
+
+  const handleSync = useCallback(
+    async (syncType: string) => {
+      const isStepSync = syncType === "step";
+      const newSteps = isStepSync
+        ? state.steps + SYNC_STEP_INCREMENT
+        : state.steps;
+      const newSitting = isStepSync
+        ? state.sitting
+        : state.sitting + SYNC_SITTING_INCREMENT;
+      const newBodyEnergy = isStepSync
+        ? state.bodyEnergy + BODY_ENERGY_STEP_CHANGE
+        : state.bodyEnergy - BODY_ENERGY_STEP_CHANGE;
+
+      const newBurned = isStepSync
+        ? Math.round(state.burned + newSteps * STEPS_CALORIE_RATE)
+        : Math.round(state.burned + newSitting * SITTING_CALORIE_RATE);
+
+      const success = await syncHealthData(USER_ID, newSteps, newSitting);
+      if (!success) {
+        return;
+      }
+
+      updateState({
+        steps: newSteps,
+        sitting: newSitting,
+        burned: newBurned,
+        bodyEnergy: newBodyEnergy,
+        caloLeft: calculateCaloLeft(DEFAULT_GOAL, newBurned, state.inTake),
+        netEnergy: calculateNetEnergy(state.inTake, state.bmr, newBurned),
+      });
+    },
+    [state, updateState]
+  );
 
   return (
     <main className="container mx-auto p-6">
       <Thinking loading={loading} />
+
       <header className="mb-6 flex justify-between">
         <h1 className="font-bold text-2xl">Dashboard</h1>
-        {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-          <div className="h-6 w-6 rounded-full bg-purple-500" />
-        </div> */}
       </header>
 
       <div className="flex justify-center">
-        <img alt="no_image" src={`/uploads/${bodyEnergyImgUrl}`} />
+        <img
+          alt="Body energy visualization"
+          src={`/uploads/${bodyEnergyImgUrl}`}
+        />
       </div>
+
       <div className="flex flex-row justify-evenly">
-        <CircularGauge caloLeft={caloLeft} goal={goal} />
-        <BodyEnergyGauge bodyEnergy={bodyEnergy} />
+        <CircularGauge caloLeft={state.caloLeft} goal={DEFAULT_GOAL} />
+        <BodyEnergyGauge bodyEnergy={state.bodyEnergy} />
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-3">
-        <StatCard color="text-blue-500" label="Intake" value={inTake} />
-
-        <StatCard color="text-blue-500" label="Burned" value={burned} />
-
+        <StatCard color="text-blue-500" label="Intake" value={state.inTake} />
+        <StatCard color="text-blue-500" label="Burned" value={state.burned} />
         <StatCard
           color="text-blue-500"
           label="Activity (Sync)"
           onClick={() => setOpenAppleHealth(true)}
-          value={steps}
-        />
-
-        {/* Popup */}
-        <AppleHealthSyncModal
-          onClose={() => setOpenAppleHealth(false)}
-          open={openAppleHealth}
-          setSteps={setSteps}
-          steps={steps}
-          burned={burned}
-          setBurned={setBurned}
-          lastSyncSteps={lastSyncSteps}
-          setLastSyncSteps={setLastSyncSteps}
-          setCaloLeft={setCaloLeft}
-          inTake={inTake}
-          goal={goal}
-          netEnergy={netEnergy}
-          setNetEnergy={setNetEnergy}
-          bmr={user ? user.bmr : 0}
-          sitting={sitting}
-          setSitting={setSitting}
-          bodyEnergy={bodyEnergy}
-          setBodyEnergy={setBodyEnergy}
-          selectedSyncType={selectedSyncType}
-          setSelectedSyncType={setSelectedSyncType}
+          value={state.steps}
         />
       </div>
 
-      <NutritionPanel netEnergy={netEnergy} />
+      <AppleHealthSyncModal
+        open={openAppleHealth}
+        state={state}
+        goal={DEFAULT_GOAL}
+        selectedSyncType={selectedSyncType}
+        onClose={() => setOpenAppleHealth(false)}
+        onSync={handleSync}
+        onTypeChange={setSelectedSyncType}
+      />
+
+      <NutritionPanel netEnergy={state.netEnergy} />
       <CoachButton />
-      {/* <RecentLogs
-        logs={[
-          {
-            title: "Healthy Salad",
-            time: "12:30 PM",
-            calories: -350,
-            image: "/food_images/salad_001.png",
-          },
-          {
-            title: "Protein Shake",
-            time: "9:10 AM",
-            calories: -220,
-            image: "/food_images/protein_shake_001.png",
-          },
-        ]}
-      /> */}
     </main>
   );
 }
