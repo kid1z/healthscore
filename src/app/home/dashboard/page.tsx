@@ -397,10 +397,7 @@ export function StatCard({ label, value, color, onClick }: StatCardProps) {
 
 function NutritionPanel({ netEnergy }: NutritionPanelProps) {
   const isBurningFat = netEnergy <= 0;
-  const netEnergyProgress = Math.min(
-    Math.round(Math.abs(netEnergy) / 1000) * 100,
-    100
-  );
+  const netEnergyProgress = Math.min((Math.abs(netEnergy) / 1000) * 100, 100);
 
   console.log("netEnergyProgress: ", netEnergyProgress);
 
