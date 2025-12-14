@@ -241,9 +241,9 @@ function BodyEnergyGauge({ bodyEnergy }: bodyEnergyProp) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative h-48 w-48">
+      <div className="relative h-42 w-42 md:h-48 md:w-48">
         <svg viewBox="0 0 100 100">
-          <title>Calories Left Gauge</title>
+          <title>B.Energy</title>
 
           {/* Background */}
           <circle
@@ -298,7 +298,7 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative h-48 w-48">
+      <div className="relative h-42 w-42 md:h-48 md:w-48">
         <svg viewBox="0 0 100 100">
           <title>Calories Left Gauge</title>
 
@@ -330,7 +330,7 @@ function CircularGauge({ goal, caloLeft }: circularGauProp) {
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="font-bold text-4xl">{caloLeft}</div>
+          <div className="font-bold text-3xl md:text-4xl">{caloLeft}</div>
           <div className="text-gray-500 text-sm">Kcal left</div>
           <div className="text-gray-500 text-sm">Goal: {goal}</div>
         </div>
