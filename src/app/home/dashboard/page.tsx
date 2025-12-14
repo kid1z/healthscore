@@ -198,13 +198,16 @@ function AppleHealthSyncModal({
   onTypeChange,
 }: AppleHealthSyncModalProps) {
   const [showCongrats, setShowCongrats] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   const handleSync = async () => {
+    setSyncLoading(true);
     await onSync(selectedSyncType);
     setShowCongrats(false);
     setTimeout(() => setShowCongrats(true), 50);
     setTimeout(() => {
       setShowCongrats(false);
+      setSyncLoading(false);
       onClose();
     }, 2000);
   };
@@ -272,10 +275,11 @@ function AppleHealthSyncModal({
         </AnimatePresence>
 
         <button
-          className="mt-6 w-full rounded-xl bg-gray-900 py-3 font-medium text-white"
+          className="mt-6 w-full rounded-xl bg-gray-900 py-3 font-medium text-white disabled:bg-gray-300"
           onClick={handleSync}
+          disabled={syncLoading}
         >
-          Sync Data
+          {syncLoading ? "Syncing..." : "Sync Data"}
         </button>
 
         <button className="mt-3 w-full text-gray-500 text-sm" onClick={onClose}>
@@ -378,7 +382,9 @@ export function StatCard({ label, value, color, onClick }: StatCardProps) {
   return (
     <button
       className={`rounded-xl bg-white p-4 text-center shadow-sm transition ${
-        onClick ? "cursor-pointer hover:shadow-md active:scale-[0.98]" : ""
+        onClick
+          ? "cursor-pointer border border-green-500 hover:shadow-md active:scale-[0.98]"
+          : ""
       }`}
       disabled={!onClick}
       onClick={onClick}
@@ -391,7 +397,10 @@ export function StatCard({ label, value, color, onClick }: StatCardProps) {
 
 function NutritionPanel({ netEnergy }: NutritionPanelProps) {
   const isBurningFat = netEnergy <= 0;
-  const netEnergyProgress = Math.min(Math.round(Math.abs(netEnergy)/1000)*100,100);
+  const netEnergyProgress = Math.min(
+    Math.round(Math.abs(netEnergy) / 1000) * 100,
+    100
+  );
 
   console.log("netEnergyProgress: ", netEnergyProgress);
 

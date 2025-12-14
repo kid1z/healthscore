@@ -1,4 +1,4 @@
-import { TriangleAlert, Utensils } from "lucide-react";
+import { Droplet, TriangleAlert, Utensils } from "lucide-react";
 import type { ReactNode } from "react";
 import { SuggestionCard } from "../components/suggestion-card";
 import {
@@ -46,7 +46,7 @@ export function generateSuggestions(
       <SuggestionCard
         accent="border-blue-400"
         description="You have walked more than 3000 steps. Please drink 250ml of water immediately."
-        icon={<Utensils className="text-blue-500" />}
+        icon={<Droplet className="text-blue-500" />}
         key="hydration"
         onClick={() =>
           openModal(
