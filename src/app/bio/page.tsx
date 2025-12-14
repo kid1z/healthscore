@@ -260,7 +260,7 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-gray-50 via-violet-50/30 to-fuchsia-50/30">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-violet-50/30 to-fuchsia-50/30">
       {/* Decorative background elements */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="-top-40 -right-40 absolute h-80 w-80 rounded-full bg-violet-200/40 blur-3xl" />
