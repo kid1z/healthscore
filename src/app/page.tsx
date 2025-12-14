@@ -15,10 +15,9 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    // Khung màn hình giả lập mobile
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-between bg-white p-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white p-6">
       {/* Vùng nội dung chính */}
-      <div className="mt-12 mb-20 flex flex-col items-center text-center">
+      <div className="flex max-w-lg flex-col items-center text-center">
         {/* Ảnh minh họa (Placeholder) */}
         <div className="mb-8 flex h-64 w-64 items-center justify-center overflow-hidden rounded-3xl bg-gray-100 shadow-lg">
           {/*  */}
