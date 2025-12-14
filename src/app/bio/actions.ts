@@ -15,8 +15,9 @@ type ProfileData = {
 export async function upsertUserProfile(data: ProfileData) {
   try {
     const user = await prisma.user.upsert({
-      where: { name: data.name },
+      where: { id: USER_ID },
       update: {
+        name: data.name,
         gender: data.gender,
         age: data.age,
         height: data.height,

@@ -245,6 +245,7 @@ export function ImageUploader({
           <div className="flex flex-wrap justify-center gap-3">
             <Button
               className="bg-linear-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600"
+              disabled
               onClick={handleUploadImg}
               variant="default"
             >
