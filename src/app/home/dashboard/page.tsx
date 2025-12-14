@@ -496,9 +496,11 @@ function NutritionPanel({ netEnergy }: NutritionPanelProps) {
 
 function CoachButton() {
   return (
-    <Button className="mt-3 w-full rounded-2xl border bg-fuchsia-500/10 p-6 text-center font-semibold text-fuchsia-600 text-xl hover:bg-fuchsia-500/40">
-      <Link href="/home/smart_coach">Open Smart Coach</Link>
-    </Button>
+    <Link href="/home/smart_coach">
+      <Button className="mt-3 w-full rounded-2xl border bg-fuchsia-500/10 p-6 text-center font-semibold text-fuchsia-600 text-xl hover:bg-fuchsia-500/40">
+        Open Smart Coach
+      </Button>
+    </Link>
   );
 }
 
