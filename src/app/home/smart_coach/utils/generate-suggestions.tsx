@@ -32,7 +32,7 @@ export function generateSuggestions(
         onClick={() =>
           openModal(
             "Sugar Alert Details",
-            `Your last dish (${data.lastLog}) contains sugar. Maintain balance!`
+            "Your last dish contains sugar. Maintain balance!"
           )
         }
         title="Sugar Alert"

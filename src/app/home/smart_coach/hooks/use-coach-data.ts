@@ -6,8 +6,8 @@ import { GOAL_KCAL, MOCK_DATA } from "../constants";
 import type { CoachData } from "../types";
 
 type UserMealsData = {
-  user?: { bmr?: number; meals?: string[] };
-  exercise?: { step?: number; sitting?: number };
+  user?: { bmr?: number; meals?: string[] } | null;
+  exercise?: { step?: number; sitting?: number } | null;
   totalIntake?: number;
 };
 
@@ -21,16 +21,16 @@ function calculateBurnedCalories(exercise?: {
 }
 
 function mapToCoachData(data: UserMealsData): CoachData {
-  const { user = {}, exercise = {}, totalIntake = 0 } = data;
+  const { user, exercise, totalIntake = 0 } = data;
 
-  const bmr = Number(user.bmr) || 300;
+  const bmr = Number(user?.bmr) || 300;
   const steps = Number(exercise?.step) || 0;
-  const burned = calculateBurnedCalories(exercise);
+  const burned = calculateBurnedCalories(exercise ?? undefined);
   const netEnergy = totalIntake - (bmr + burned);
 
   return {
     netEnergy,
-    lastLog: user.meals?.[user.meals.length - 1] || "Unknown",
+    lastLog: user?.meals?.[user.meals.length - 1] || "Unknown",
     steps,
     kcalLeft: GOAL_KCAL + burned - totalIntake,
   };
