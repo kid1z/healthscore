@@ -1,12 +1,14 @@
 "use client";
 
-import { Camera, ImageIcon, Loader2, Upload, X } from "lucide-react";
+import { Camera, ImageIcon, Upload, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import type React from "react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import ShinyText from "./shiny-text";
 
 type ImageUploaderProps = {
   onImageSelect: (file: File) => void;
@@ -165,17 +167,24 @@ export function ImageUploader({
               src={selectedImage}
             />
             {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                <div className="text-center">
-                  <Loader2 className="mx-auto mb-3 h-12 w-12 animate-spin text-white" />
-                  <p className="font-medium text-white">
-                    Analyzing your meal...
-                  </p>
-                  <p className="mt-1 text-sm text-white/70">
-                    Our AI is identifying ingredients
-                  </p>
-                </div>
-              </div>
+              <AnimatePresence>
+                <motion.div
+                  animate={{ opacity: 1 }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex flex-col items-center gap-4 rounded-2xl p-8">
+                    <ShinyText
+                      className="animate-shine text-3xl"
+                      disabled={false}
+                      speed={3}
+                      text="Thinking!"
+                    />
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             ) : null}
             {!isLoading && onClear ? (
               <Button
